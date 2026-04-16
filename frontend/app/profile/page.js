@@ -1,63 +1,94 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
-  const router = useRouter();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchProfile() {
-      const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
 
-      // 🔒 Se não tiver token → volta pro login
-      if (!token) {
-        router.push("/login");
-        return;
-      }
+    if (!token) {
+      window.location.replace("/login");
+      return;
+    }
 
+    async function loadProfile() {
       try {
-        const response = await fetch("http://localhost:8000/profile", {
-          headers: {
-            Authorization: `Bearer ${token}`
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/profile`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
           }
-        });
+        );
 
-        // 🔒 Token inválido
+        const data = await response.json();
+
         if (!response.ok) {
           localStorage.removeItem("token");
-          router.push("/login");
+          window.location.replace("/login");
           return;
         }
 
-        const data = await response.json();
         setUser(data);
 
       } catch (error) {
-        router.push("/login");
+        alert("Erro ao carregar perfil ❌");
+      } finally {
+        setLoading(false);
       }
     }
 
-    fetchProfile();
+    loadProfile();
   }, []);
 
   function handleLogout() {
     localStorage.removeItem("token");
-    router.push("/login");
+    window.location.replace("/login");
   }
 
-  if (!user) return <p>Carregando...</p>;
+  if (loading) {
+    return (
+      <p className="text-center mt-10 text-gray-600">
+        Carregando perfil...
+      </p>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Perfil</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
 
-      <p>Nome: {user.name}</p>
-      <p>Email: {user.email}</p>
+      <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md text-center">
 
-      <br />
-      <button onClick={handleLogout}>Logout</button>
+        <h1 className="text-2xl font-bold mb-6">
+          Meu Perfil
+        </h1>
+
+        <div className="space-y-2 mb-6">
+          <p>
+            <strong>Nome:</strong> {user.name}
+          </p>
+
+          <p>
+            <strong>Email:</strong> {user.email}
+          </p>
+        </div>
+
+        <button
+          onClick={handleLogout}
+          className="w-full bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition"
+        >
+          Sair
+        </button>
+
+      </div>
     </div>
   );
 }

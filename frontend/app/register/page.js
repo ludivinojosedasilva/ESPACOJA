@@ -1,33 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function Login() {
+export default function Register() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleLogin(e) {
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      window.location.href = "/profile";
+    }
+  }, []);
+
+  async function handleRegister(e) {
     e.preventDefault();
     setLoading(true);
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/login`,
+        `${process.env.NEXT_PUBLIC_API_URL}/users`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({ name, email, password })
         }
       );
 
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem("token", data.token);
-        window.location.href = "/profile";
+        alert("Usuário criado com sucesso 🚀");
+        window.location.href = "/login";
       } else {
         alert(data.message);
       }
@@ -45,39 +53,46 @@ export default function Login() {
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
 
         <h1 className="text-2xl font-bold text-center mb-6">
-          Entrar no EspaçoJá
+          Criar Conta
         </h1>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleRegister} className="space-y-4">
+
+          <input
+            type="text"
+            placeholder="Nome"
+            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500"
+            onChange={(e) => setName(e.target.value)}
+          />
 
           <input
             type="email"
             placeholder="Email"
-            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500"
             onChange={(e) => setEmail(e.target.value)}
           />
 
           <input
             type="password"
             placeholder="Senha"
-            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500"
             onChange={(e) => setPassword(e.target.value)}
           />
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition"
+            className="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition"
           >
-            {loading ? "Entrando..." : "Entrar"}
+            {loading ? "Criando..." : "Cadastrar"}
           </button>
 
         </form>
 
         <p className="text-center mt-4 text-sm">
-          Não tem conta?{" "}
-          <a href="/register" className="text-blue-500 hover:underline">
-            Criar conta
+          Já tem conta?{" "}
+          <a href="/login" className="text-blue-500 hover:underline">
+            Fazer login
           </a>
         </p>
 

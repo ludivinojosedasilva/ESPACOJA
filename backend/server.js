@@ -7,8 +7,17 @@ const sequelize = require("./config/database");
 const User = require("./models/User");
 
 const app = express();
+const Space = require("./models/Space");
 
-app.use(cors());
+/* =========================
+   🌐 CORS CONFIGURADO (CORRETO)
+========================= */
+app.use(cors({
+  origin: "http://localhost:3000",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
+
 app.use(express.json());
 
 /* =========================
@@ -165,3 +174,32 @@ sequelize.sync()
     });
   })
   .catch(err => console.log(err));
+
+  
+app.post("/spaces", async (req, res) => {
+  try {
+    const { name, description, location, price } = req.body;
+
+    const space = await Space.create({
+      name,
+      description,
+      location,
+      price
+    });
+
+    res.status(201).json(space);
+
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao criar espaço" });
+  }
+});
+
+app.get("/spaces", async (req, res) => {
+  try {
+    const spaces = await Space.findAll();
+    res.json(spaces);
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao buscar espaços" });
+  }
+});
+
