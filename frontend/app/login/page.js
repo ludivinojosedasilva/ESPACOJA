@@ -27,7 +27,7 @@ export default function Login() {
 
       if (response.ok) {
         localStorage.setItem("token", data.token);
-        window.location.href = "/profile";
+        window.location.replace("/dashboard");
       } else {
         alert(data.message);
       }

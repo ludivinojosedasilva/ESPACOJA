@@ -5,12 +5,12 @@ const jwt = require("jsonwebtoken");
 
 const sequelize = require("./config/database");
 const User = require("./models/User");
-
-const app = express();
 const Space = require("./models/Space");
 
+const app = express();
+
 /* =========================
-   🌐 CORS CONFIGURADO (CORRETO)
+   🌐 MIDDLEWARES
 ========================= */
 app.use(cors({
   origin: "http://localhost:3000",
@@ -21,7 +21,7 @@ app.use(cors({
 app.use(express.json());
 
 /* =========================
-   🔐 Middleware de autenticação
+   🔐 AUTH MIDDLEWARE
 ========================= */
 function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -42,14 +42,14 @@ function authMiddleware(req, res, next) {
 }
 
 /* =========================
-   📌 Rota inicial
+   📌 ROTAS BASE
 ========================= */
 app.get("/", (req, res) => {
   res.json({ message: "API EspaçoJá funcionando 🚀" });
 });
 
 /* =========================
-   📌 Listar usuários
+   👤 USERS
 ========================= */
 app.get("/users", async (req, res) => {
   try {
@@ -66,9 +66,6 @@ app.get("/users", async (req, res) => {
   }
 });
 
-/* =========================
-   📌 Criar usuário
-========================= */
 app.post("/users", async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -106,7 +103,7 @@ app.post("/users", async (req, res) => {
 });
 
 /* =========================
-   🔐 Login
+   🔐 LOGIN
 ========================= */
 app.post("/login", async (req, res) => {
   try {
@@ -141,7 +138,7 @@ app.post("/login", async (req, res) => {
 });
 
 /* =========================
-   🔐 Perfil (protegido)
+   🔐 PROFILE
 ========================= */
 app.get("/profile", authMiddleware, async (req, res) => {
   try {
@@ -163,7 +160,65 @@ app.get("/profile", authMiddleware, async (req, res) => {
 });
 
 /* =========================
-   🚀 Conectar + rodar servidor
+   🏠 SPACES (CRUD)
+========================= */
+
+// LISTAR TODOS
+app.get("/spaces", async (req, res) => {
+  try {
+    const spaces = await Space.findAll({
+      order: [["id", "DESC"]]
+    });
+
+    res.json(spaces);
+
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao buscar espaços" });
+  }
+});
+
+// CRIAR
+app.post("/spaces", async (req, res) => {
+  try {
+    const { name, description, location, price } = req.body;
+
+    if (!name || !description || !location || !price) {
+      return res.status(400).json({ message: "Campos obrigatórios faltando" });
+    }
+
+    const space = await Space.create({
+      name,
+      description,
+      location,
+      price: Number(price)
+    });
+
+    res.status(201).json(space);
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Erro ao criar espaço" });
+  }
+});
+
+// BUSCAR POR ID (IMPORTANTE PARA /spaces/[id])
+app.get("/spaces/:id", async (req, res) => {
+  try {
+    const space = await Space.findByPk(req.params.id);
+
+    if (!space) {
+      return res.status(404).json({ message: "Espaço não encontrado" });
+    }
+
+    res.json(space);
+
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao buscar espaço" });
+  }
+});
+
+/* =========================
+   🚀 START SERVER
 ========================= */
 sequelize.sync()
   .then(() => {
@@ -174,32 +229,3 @@ sequelize.sync()
     });
   })
   .catch(err => console.log(err));
-
-  
-app.post("/spaces", async (req, res) => {
-  try {
-    const { name, description, location, price } = req.body;
-
-    const space = await Space.create({
-      name,
-      description,
-      location,
-      price
-    });
-
-    res.status(201).json(space);
-
-  } catch (error) {
-    res.status(500).json({ message: "Erro ao criar espaço" });
-  }
-});
-
-app.get("/spaces", async (req, res) => {
-  try {
-    const spaces = await Space.findAll();
-    res.json(spaces);
-  } catch (error) {
-    res.status(500).json({ message: "Erro ao buscar espaços" });
-  }
-});
-
