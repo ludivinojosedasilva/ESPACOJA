@@ -1,10 +1,9 @@
 const express = require("express");
-const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-require("dotenv").config();
 
+const sequelize = require("./config/database");
 const User = require("./models/User");
 
 const app = express();
@@ -12,12 +11,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 🔗 Conexão com MongoDB
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB conectado 🚀"))
-  .catch(err => console.log(err));
-
-// 🔐 Middleware de autenticação
+/* =========================
+   🔐 Middleware de autenticação
+========================= */
 function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
 
@@ -36,27 +32,34 @@ function authMiddleware(req, res, next) {
   }
 }
 
-// 📌 Rota inicial
+/* =========================
+   📌 Rota inicial
+========================= */
 app.get("/", (req, res) => {
   res.json({ message: "API EspaçoJá funcionando 🚀" });
 });
 
-// 📌 Listar usuários
+/* =========================
+   📌 Listar usuários
+========================= */
 app.get("/users", async (req, res) => {
   try {
-    const users = await User.find();
+    const users = await User.findAll();
 
     res.json(users.map(u => ({
-      id: u._id,
+      id: u.id,
       name: u.name,
       email: u.email
     })));
+
   } catch (error) {
     res.status(500).json({ message: "Erro ao buscar usuários" });
   }
 });
 
-// 📌 Criar usuário
+/* =========================
+   📌 Criar usuário
+========================= */
 app.post("/users", async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -65,14 +68,15 @@ app.post("/users", async (req, res) => {
       return res.status(400).json({ message: "Preencha todos os campos" });
     }
 
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ where: { email } });
+
     if (userExists) {
       return res.status(400).json({ message: "Email já cadastrado" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await User.create({
+    const user = await User.create({
       name,
       email,
       password: hashedPassword
@@ -81,9 +85,9 @@ app.post("/users", async (req, res) => {
     res.status(201).json({
       message: "Usuário criado com sucesso 🚀",
       user: {
-        id: newUser._id,
-        name: newUser.name,
-        email: newUser.email
+        id: user.id,
+        name: user.name,
+        email: user.email
       }
     });
 
@@ -92,12 +96,14 @@ app.post("/users", async (req, res) => {
   }
 });
 
-// 🔐 Login
+/* =========================
+   🔐 Login
+========================= */
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ where: { email } });
 
     if (!user) {
       return res.status(400).json({ message: "Usuário não encontrado" });
@@ -110,7 +116,7 @@ app.post("/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user._id, email: user.email },
+      { id: user.id, email: user.email },
       "segredo_super_secreto",
       { expiresIn: "1h" }
     );
@@ -125,17 +131,19 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// 🔐 Perfil (protegido)
+/* =========================
+   🔐 Perfil (protegido)
+========================= */
 app.get("/profile", authMiddleware, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findByPk(req.user.id);
 
     if (!user) {
       return res.status(404).json({ message: "Usuário não encontrado" });
     }
 
     res.json({
-      id: user._id,
+      id: user.id,
       name: user.name,
       email: user.email
     });
@@ -145,7 +153,15 @@ app.get("/profile", authMiddleware, async (req, res) => {
   }
 });
 
-// 🚀 Servidor
-app.listen(8000, () => {
-  console.log("Servidor rodando na porta 8000");
-});
+/* =========================
+   🚀 Conectar + rodar servidor
+========================= */
+sequelize.sync()
+  .then(() => {
+    console.log("Banco sincronizado 🚀");
+
+    app.listen(8000, () => {
+      console.log("Servidor rodando na porta 8000");
+    });
+  })
+  .catch(err => console.log(err));
