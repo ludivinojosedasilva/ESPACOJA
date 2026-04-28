@@ -9,12 +9,12 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  // form
   const [form, setForm] = useState({
     name: "",
     description: "",
     location: "",
-    price: ""
+    price: "",
+    image: null
   });
 
   useEffect(() => {
@@ -25,39 +25,47 @@ export default function Dashboard() {
       return;
     }
 
-    const loadData = async () => {
-      try {
-        const [profileRes, spacesRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile`, {
-            headers: {
-              Authorization: `Bearer ${token}`
+    loadData(token);
+  }, []);
+
+  async function loadData(token) {
+    try {
+      const [profileRes, spacesRes] =
+        await Promise.all([
+          fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/profile`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`
+              }
             }
-          }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/spaces`)
+          ),
+          fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/spaces`
+          )
         ]);
 
-        if (!profileRes.ok) {
-          localStorage.removeItem("token");
-          window.location.replace("/login");
-          return;
-        }
-
-        const profileData = await profileRes.json();
-        const spacesData = await spacesRes.json();
-
-        setUser(profileData);
-        setSpaces(spacesData || []);
-
-      } catch (error) {
-        console.error(error);
-        alert("Erro ao carregar dashboard");
-      } finally {
-        setLoading(false);
+      if (!profileRes.ok) {
+        localStorage.removeItem("token");
+        window.location.replace("/login");
+        return;
       }
-    };
 
-    loadData();
-  }, []);
+      const profile =
+        await profileRes.json();
+
+      const spacesData =
+        await spacesRes.json();
+
+      setUser(profile);
+      setSpaces(spacesData);
+
+    } catch {
+      alert("Erro ao carregar dashboard");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function logout() {
     localStorage.removeItem("token");
@@ -66,57 +74,83 @@ export default function Dashboard() {
 
   function handleChange(e) {
     const { name, value } = e.target;
-    setForm(prev => ({
+
+    setForm((prev) => ({
       ...prev,
       [name]: value
+    }));
+  }
+
+  function handleFile(e) {
+    const file = e.target.files[0];
+
+    setForm((prev) => ({
+      ...prev,
+      image: file
     }));
   }
 
   async function createSpace(e) {
     e.preventDefault();
 
-    if (!form.name || !form.location || !form.price) {
-      alert("Preencha os campos obrigatórios");
-      return;
-    }
-
     setSubmitting(true);
 
     try {
+      const formData = new FormData();
+
+      formData.append("name", form.name);
+      formData.append(
+        "description",
+        form.description
+      );
+      formData.append(
+        "location",
+        form.location
+      );
+      formData.append("price", form.price);
+
+      if (form.image) {
+        formData.append(
+          "image",
+          form.image
+        );
+      }
+
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/spaces`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            ...form,
-            price: Number(form.price)
-          })
+          body: formData
         }
       );
 
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Erro ao criar espaço");
+        alert(
+          data.message ||
+          "Erro ao criar espaço"
+        );
         return;
       }
 
-      // atualização segura do estado
-      setSpaces(prev => [data, ...prev]);
+      setSpaces((prev) => [
+        data,
+        ...prev
+      ]);
 
       setForm({
         name: "",
         description: "",
         location: "",
-        price: ""
+        price: "",
+        image: null
       });
 
-    } catch (error) {
-      console.error(error);
-      alert("Erro de conexão");
+      alert("Espaço criado 🚀");
+
+    } catch {
+      alert("Erro ao criar espaço");
     } finally {
       setSubmitting(false);
     }
@@ -124,8 +158,8 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <p className="text-center mt-10 text-gray-600">
-        Carregando dashboard...
+      <p className="text-center mt-10">
+        Carregando...
       </p>
     );
   }
@@ -140,7 +174,7 @@ export default function Dashboard() {
         </h1>
 
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600">
+          <span>
             Olá, {user?.name}
           </span>
 
@@ -153,91 +187,117 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="p-6 max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto p-6">
 
         {/* FORM */}
-        <div className="bg-white p-6 rounded-xl shadow mb-6">
+        <div className="bg-white p-6 rounded-2xl shadow mb-8">
 
-          <h2 className="text-lg font-bold mb-4">
-            Criar novo espaço
+          <h2 className="text-xl font-bold mb-4">
+            Criar Novo Espaço
           </h2>
 
-          <form onSubmit={createSpace} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
+          <form
+            onSubmit={createSpace}
+            className="grid md:grid-cols-2 gap-4"
+          >
             <input
               name="name"
+              placeholder="Nome"
               value={form.name}
               onChange={handleChange}
-              placeholder="Nome"
-              className="p-2 border rounded"
+              className="p-3 border rounded-lg"
+              required
             />
 
             <input
               name="location"
+              placeholder="Localização"
               value={form.location}
               onChange={handleChange}
-              placeholder="Localização"
-              className="p-2 border rounded"
+              className="p-3 border rounded-lg"
+              required
             />
 
             <input
               name="price"
+              placeholder="Preço"
               value={form.price}
               onChange={handleChange}
-              placeholder="Preço"
-              className="p-2 border rounded"
+              className="p-3 border rounded-lg"
+              required
             />
 
             <input
+              type="file"
+              accept="image/*"
+              onChange={handleFile}
+              className="p-3 border rounded-lg"
+            />
+
+            <textarea
               name="description"
+              placeholder="Descrição"
               value={form.description}
               onChange={handleChange}
-              placeholder="Descrição"
-              className="p-2 border rounded md:col-span-2"
+              className="p-3 border rounded-lg md:col-span-2"
+              rows="4"
+              required
             />
 
             <button
               type="submit"
               disabled={submitting}
-              className="bg-green-500 text-white p-2 rounded md:col-span-2 disabled:opacity-50"
+              className="bg-green-500 text-white p-3 rounded-lg md:col-span-2"
             >
-              {submitting ? "Criando..." : "Criar Espaço"}
+              {submitting
+                ? "Criando..."
+                : "Criar Espaço"}
             </button>
-
           </form>
         </div>
 
-        {/* LIST */}
-        <h2 className="text-xl font-bold mb-4">
-          Espaços disponíveis
+        {/* LISTA */}
+        <h2 className="text-2xl font-bold mb-4">
+          Espaços Disponíveis
         </h2>
 
         {spaces.length === 0 ? (
-          <p className="text-gray-500">
-            Nenhum espaço cadastrado ainda.
-          </p>
+          <p>Nenhum espaço cadastrado.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-3 gap-6">
 
             {spaces.map((space) => (
-              <Link key={space.id} href={`/spaces/${space.id}`}>
-                <div className="bg-white p-5 rounded-xl shadow hover:shadow-lg cursor-pointer transition">
+              <Link
+                key={space.id}
+                href={`/spaces/${space.id}`}
+              >
+                <div className="bg-white rounded-2xl shadow overflow-hidden hover:shadow-xl transition cursor-pointer">
 
-                  <h3 className="font-bold">
-                    {space.name}
-                  </h3>
+                  {space.image && (
+                    <img
+                      src={`${process.env.NEXT_PUBLIC_API_URL}${space.image}`}
+                      alt={space.name}
+                      className="w-full h-52 object-cover"
+                    />
+                  )}
 
-                  <p className="text-sm text-gray-600">
-                    {space.description}
-                  </p>
+                  <div className="p-4">
+                    <h3 className="text-lg font-bold">
+                      {space.name}
+                    </h3>
 
-                  <p className="text-sm">
-                    📍 {space.location}
-                  </p>
+                    <p className="text-sm text-gray-600 mt-2">
+                      {space.description}
+                    </p>
 
-                  <p className="font-bold text-green-600">
-                    R$ {space.price}
-                  </p>
+                    <p className="mt-2">
+                      📍 {space.location}
+                    </p>
+
+                    <p className="text-green-600 font-bold mt-2">
+                      R$ {space.price}
+                    </p>
+                  </div>
 
                 </div>
               </Link>

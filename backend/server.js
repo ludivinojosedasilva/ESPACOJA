@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const multer = require("multer");
+const path = require("path");
 
 const sequelize = require("./config/database");
 const User = require("./models/User");
@@ -9,6 +11,24 @@ const Space = require("./models/Space");
 const Reservation = require("./models/Reservation");
 
 const app = express();
+
+/* =========================
+   📁 UPLOAD CONFIG
+========================= */
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+
+  filename: (req, file, cb) => {
+    const uniqueName =
+      Date.now() + path.extname(file.originalname);
+
+    cb(null, uniqueName);
+  }
+});
+
+const upload = multer({ storage });
 
 /* =========================
    🌐 MIDDLEWARES
@@ -21,6 +41,8 @@ app.use(cors({
 
 app.use(express.json());
 
+app.use("/uploads", express.static("uploads"));
+
 /* =========================
    🔐 AUTH
 ========================= */
@@ -28,17 +50,26 @@ function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
-    return res.status(401).json({ message: "Token não fornecido" });
+    return res.status(401).json({
+      message: "Token não fornecido"
+    });
   }
 
   const token = authHeader.split(" ")[1];
 
   try {
-    const decoded = jwt.verify(token, "segredo_super_secreto");
+    const decoded = jwt.verify(
+      token,
+      "segredo_super_secreto"
+    );
+
     req.user = decoded;
     next();
+
   } catch {
-    return res.status(401).json({ message: "Token inválido" });
+    return res.status(401).json({
+      message: "Token inválido"
+    });
   }
 }
 
@@ -46,20 +77,29 @@ function authMiddleware(req, res, next) {
    📌 BASE
 ========================= */
 app.get("/", (req, res) => {
-  res.json({ message: "API EspaçoJá funcionando 🚀" });
+  res.json({
+    message: "API EspaçoJá funcionando 🚀"
+  });
 });
 
 /* =========================
    👤 USERS
 ========================= */
 app.get("/users", async (req, res) => {
-  const users = await User.findAll();
+  try {
+    const users = await User.findAll();
 
-  res.json(users.map(u => ({
-    id: u.id,
-    name: u.name,
-    email: u.email
-  })));
+    res.json(users.map(user => ({
+      id: user.id,
+      name: user.name,
+      email: user.email
+    })));
+
+  } catch {
+    res.status(500).json({
+      message: "Erro ao buscar usuários"
+    });
+  }
 });
 
 app.post("/users", async (req, res) => {
@@ -84,7 +124,11 @@ app.post("/users", async (req, res) => {
       password: hash
     });
 
-    res.status(201).json(user);
+    res.status(201).json({
+      id: user.id,
+      name: user.name,
+      email: user.email
+    });
 
   } catch {
     res.status(500).json({
@@ -140,59 +184,116 @@ app.post("/login", async (req, res) => {
 });
 
 /* =========================
-   PROFILE
+   👤 PROFILE
 ========================= */
-app.get("/profile", authMiddleware, async (req, res) => {
-  const user = await User.findByPk(req.user.id);
+app.get(
+  "/profile",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const user = await User.findByPk(
+        req.user.id
+      );
 
-  res.json({
-    id: user.id,
-    name: user.name,
-    email: user.email
-  });
-});
+      if (!user) {
+        return res.status(404).json({
+          message: "Usuário não encontrado"
+        });
+      }
+
+      res.json({
+        id: user.id,
+        name: user.name,
+        email: user.email
+      });
+
+    } catch {
+      res.status(500).json({
+        message: "Erro ao buscar perfil"
+      });
+    }
+  }
+);
 
 /* =========================
    🏠 SPACES
 ========================= */
+
+// listar
 app.get("/spaces", async (req, res) => {
-  const spaces = await Space.findAll({
-    order: [["id", "DESC"]]
-  });
-
-  res.json(spaces);
-});
-
-app.post("/spaces", async (req, res) => {
   try {
-    const { name, description, location, price } = req.body;
-
-    const space = await Space.create({
-      name,
-      description,
-      location,
-      price
+    const spaces = await Space.findAll({
+      order: [["id", "DESC"]]
     });
 
-    res.status(201).json(space);
+    res.json(spaces);
 
   } catch {
     res.status(500).json({
-      message: "Erro ao criar espaço"
+      message: "Erro ao buscar espaços"
     });
   }
 });
 
-app.get("/spaces/:id", async (req, res) => {
-  const space = await Space.findByPk(req.params.id);
+// criar com upload real
+app.post(
+  "/spaces",
+  upload.single("image"),
+  async (req, res) => {
+    try {
+      const {
+        name,
+        description,
+        location,
+        price
+      } = req.body;
 
-  if (!space) {
-    return res.status(404).json({
-      message: "Espaço não encontrado"
+      let image = null;
+
+      if (req.file) {
+        image = `/uploads/${req.file.filename}`;
+      }
+
+      const space = await Space.create({
+        name,
+        description,
+        location,
+        price,
+        image
+      });
+
+      res.status(201).json(space);
+
+    } catch (error) {
+      console.log(error);
+
+      res.status(500).json({
+        message: "Erro ao criar espaço"
+      });
+    }
+  }
+);
+
+// detalhes
+app.get("/spaces/:id", async (req, res) => {
+  try {
+    const space = await Space.findByPk(
+      req.params.id
+    );
+
+    if (!space) {
+      return res.status(404).json({
+        message: "Espaço não encontrado"
+      });
+    }
+
+    res.json(space);
+
+  } catch {
+    res.status(500).json({
+      message: "Erro ao buscar espaço"
     });
   }
-
-  res.json(space);
 });
 
 /* =========================
@@ -200,94 +301,132 @@ app.get("/spaces/:id", async (req, res) => {
 ========================= */
 
 // criar reserva
-app.post("/reservations", async (req, res) => {
-  try {
-    const {
-      customerName,
-      phone,
-      startDateTime,
-      endDateTime,
-      spaceId
-    } = req.body;
+app.post(
+  "/reservations",
+  async (req, res) => {
+    try {
+      const {
+        customerName,
+        phone,
+        startDateTime,
+        endDateTime,
+        spaceId
+      } = req.body;
 
-    if (
-      !customerName ||
-      !phone ||
-      !startDateTime ||
-      !endDateTime ||
-      !spaceId
-    ) {
-      return res.status(400).json({
-        message: "Preencha todos os campos."
+      if (
+        !customerName ||
+        !phone ||
+        !startDateTime ||
+        !endDateTime ||
+        !spaceId
+      ) {
+        return res.status(400).json({
+          message:
+            "Preencha todos os campos."
+        });
+      }
+
+      const start = new Date(
+        startDateTime
+      );
+
+      const end = new Date(
+        endDateTime
+      );
+
+      if (end <= start) {
+        return res.status(400).json({
+          message:
+            "Data/Hora término deve ser maior que início."
+        });
+      }
+
+      const reservations =
+        await Reservation.findAll({
+          where: { spaceId }
+        });
+
+      for (const item of reservations) {
+        const existingStart =
+          new Date(
+            item.startDateTime
+          );
+
+        const existingEnd =
+          new Date(
+            item.endDateTime
+          );
+
+        const hasConflict =
+          start < existingEnd &&
+          end > existingStart;
+
+        if (hasConflict) {
+          return res.status(400).json({
+            message:
+              "Este espaço já está reservado nesse horário."
+          });
+        }
+      }
+
+      const reservation =
+        await Reservation.create({
+          customerName,
+          phone,
+          startDateTime,
+          endDateTime,
+          spaceId
+        });
+
+      res.status(201).json(
+        reservation
+      );
+
+    } catch (error) {
+      console.log(error);
+
+      res.status(500).json({
+        message:
+          "Erro ao criar reserva"
       });
     }
-
-    if (new Date(endDateTime) <= new Date(startDateTime)) {
-      return res.status(400).json({
-        message: "Data final deve ser maior que inicial."
-      });
-    }
-
-    const reservation = await Reservation.create({
-      customerName,
-      phone,
-      startDateTime,
-      endDateTime,
-      spaceId
-    });
-
-    res.status(201).json(reservation);
-
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).json({
-      message: "Erro ao criar reserva"
-    });
   }
-});
+);
 
 // listar reservas
-app.get("/reservations", async (req, res) => {
-  const reservations =
-    await Reservation.findAll({
-      order: [["id", "DESC"]]
-    });
+app.get(
+  "/reservations",
+  async (req, res) => {
+    try {
+      const reservations =
+        await Reservation.findAll({
+          order: [["id", "DESC"]]
+        });
 
-  res.json(reservations);
-});
+      res.json(reservations);
 
-app.get("/reservations/:spaceId/:date", async (req, res) => {
-  try {
-    const { spaceId, date } = req.params;
-
-    const reservations = await Reservation.findAll({
-      where: {
-        spaceId,
-        date
-      }
-    });
-
-    const times = reservations.map(r => r.time);
-
-    res.json(times);
-
-  } catch (error) {
-    res.status(500).json({
-      message: "Erro ao buscar horários"
-    });
+    } catch {
+      res.status(500).json({
+        message:
+          "Erro ao buscar reservas"
+      });
+    }
   }
-});
+);
 
 /* =========================
    🚀 START
 ========================= */
 sequelize.sync()
   .then(() => {
-    console.log("Banco sincronizado 🚀");
+    console.log(
+      "Banco sincronizado 🚀"
+    );
 
     app.listen(8000, () => {
-      console.log("Servidor rodando na porta 8000");
+      console.log(
+        "Servidor rodando na porta 8000"
+      );
     });
   })
   .catch(console.log);
