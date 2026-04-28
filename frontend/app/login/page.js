@@ -1,14 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      window.location.replace("/dashboard");
+    }
+  }, []);
+
   async function handleLogin(e) {
     e.preventDefault();
+
+    if (!email || !password) {
+      alert("Preencha email e senha.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -25,12 +40,13 @@ export default function Login() {
 
       const data = await response.json();
 
-      if (response.ok) {
-        localStorage.setItem("token", data.token);
-        window.location.replace("/dashboard");
-      } else {
-        alert(data.message);
+      if (!response.ok) {
+        alert(data.message || "Erro no login");
+        return;
       }
+
+      localStorage.setItem("token", data.token);
+      window.location.replace("/dashboard");
 
     } catch (error) {
       alert("Erro ao conectar com servidor ❌");
@@ -42,43 +58,54 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
 
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
+      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl">
 
-        <h1 className="text-2xl font-bold text-center mb-6">
-          Entrar no EspaçoJá
+        <h1 className="text-3xl font-bold text-center mb-2">
+          EspaçoJá
         </h1>
+
+        <p className="text-center text-gray-500 mb-6">
+          Faça login para continuar
+        </p>
 
         <form onSubmit={handleLogin} className="space-y-4">
 
           <input
             type="email"
-            placeholder="Email"
-            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            placeholder="Digite seu email"
+            value={email}
+            required
             onChange={(e) => setEmail(e.target.value)}
+            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
 
           <input
             type="password"
-            placeholder="Senha"
-            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            placeholder="Digite sua senha"
+            value={password}
+            required
             onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition"
+            className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition disabled:opacity-60"
           >
             {loading ? "Entrando..." : "Entrar"}
           </button>
 
         </form>
 
-        <p className="text-center mt-4 text-sm">
+        <p className="text-center mt-5 text-sm text-gray-600">
           Não tem conta?{" "}
-          <a href="/register" className="text-blue-500 hover:underline">
+          <Link
+            href="/register"
+            className="text-blue-500 hover:underline"
+          >
             Criar conta
-          </a>
+          </Link>
         </p>
 
       </div>

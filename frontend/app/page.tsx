@@ -6,7 +6,7 @@ export default function Home() {
   const [message, setMessage] = useState("Carregando...");
 
   useEffect(() => {
-    fetch("http://localhost:8000")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`)
       .then((res) => res.json())
       .then((data) => setMessage(data.message))
       .catch(() => setMessage("Erro ao conectar com backend"));
