@@ -19,11 +19,9 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/");
   },
-
   filename: (req, file, cb) => {
     const uniqueName =
       Date.now() + path.extname(file.originalname);
-
     cb(null, uniqueName);
   }
 });
@@ -40,7 +38,6 @@ app.use(cors({
 }));
 
 app.use(express.json());
-
 app.use("/uploads", express.static("uploads"));
 
 /* =========================
@@ -85,23 +82,6 @@ app.get("/", (req, res) => {
 /* =========================
    👤 USERS
 ========================= */
-app.get("/users", async (req, res) => {
-  try {
-    const users = await User.findAll();
-
-    res.json(users.map(user => ({
-      id: user.id,
-      name: user.name,
-      email: user.email
-    })));
-
-  } catch {
-    res.status(500).json({
-      message: "Erro ao buscar usuários"
-    });
-  }
-});
-
 app.post("/users", async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -186,40 +166,34 @@ app.post("/login", async (req, res) => {
 /* =========================
    👤 PROFILE
 ========================= */
-app.get(
-  "/profile",
-  authMiddleware,
-  async (req, res) => {
-    try {
-      const user = await User.findByPk(
-        req.user.id
-      );
+app.get("/profile", authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id);
 
-      if (!user) {
-        return res.status(404).json({
-          message: "Usuário não encontrado"
-        });
-      }
-
-      res.json({
-        id: user.id,
-        name: user.name,
-        email: user.email
-      });
-
-    } catch {
-      res.status(500).json({
-        message: "Erro ao buscar perfil"
+    if (!user) {
+      return res.status(404).json({
+        message: "Usuário não encontrado"
       });
     }
+
+    res.json({
+      id: user.id,
+      name: user.name,
+      email: user.email
+    });
+
+  } catch {
+    res.status(500).json({
+      message: "Erro ao buscar perfil"
+    });
   }
-);
+});
 
 /* =========================
    🏠 SPACES
 ========================= */
 
-// listar
+// LISTAR
 app.get("/spaces", async (req, res) => {
   try {
     const spaces = await Space.findAll({
@@ -235,51 +209,40 @@ app.get("/spaces", async (req, res) => {
   }
 });
 
-// criar com upload real
-app.post(
-  "/spaces",
-  upload.single("image"),
-  async (req, res) => {
-    try {
-      const {
-        name,
-        description,
-        location,
-        price
-      } = req.body;
+// CRIAR
+app.post("/spaces", upload.single("image"), async (req, res) => {
+  try {
+    const { name, description, location, price } = req.body;
 
-      let image = null;
+    let image = null;
 
-      if (req.file) {
-        image = `/uploads/${req.file.filename}`;
-      }
-
-      const space = await Space.create({
-        name,
-        description,
-        location,
-        price,
-        image
-      });
-
-      res.status(201).json(space);
-
-    } catch (error) {
-      console.log(error);
-
-      res.status(500).json({
-        message: "Erro ao criar espaço"
-      });
+    if (req.file) {
+      image = `/uploads/${req.file.filename}`;
     }
-  }
-);
 
-// detalhes
+    const space = await Space.create({
+      name,
+      description,
+      location,
+      price,
+      image
+    });
+
+    res.status(201).json(space);
+
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: "Erro ao criar espaço"
+    });
+  }
+});
+
+// DETALHE
 app.get("/spaces/:id", async (req, res) => {
   try {
-    const space = await Space.findByPk(
-      req.params.id
-    );
+    const space = await Space.findByPk(req.params.id);
 
     if (!space) {
       return res.status(404).json({
@@ -296,137 +259,155 @@ app.get("/spaces/:id", async (req, res) => {
   }
 });
 
+// 🔥 UPDATE (CORRIGIDO)
+app.put("/spaces/:id", upload.single("image"), async (req, res) => {
+  try {
+    const space = await Space.findByPk(req.params.id);
+
+    if (!space) {
+      return res.status(404).json({
+        message: "Espaço não encontrado"
+      });
+    }
+
+    const { name, description, location, price } = req.body;
+
+    let image = space.image;
+
+    // se enviar nova imagem → substitui
+    if (req.file) {
+      image = `/uploads/${req.file.filename}`;
+    }
+
+    await space.update({
+      name,
+      description,
+      location,
+      price,
+      image
+    });
+
+    res.json(space);
+
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: "Erro ao atualizar espaço"
+    });
+  }
+});
+
+// 🔥 DELETE (CORRIGIDO)
+app.delete("/spaces/:id", async (req, res) => {
+  try {
+    const space = await Space.findByPk(req.params.id);
+
+    if (!space) {
+      return res.status(404).json({
+        message: "Espaço não encontrado"
+      });
+    }
+
+    await space.destroy();
+
+    res.json({
+      message: "Espaço deletado com sucesso"
+    });
+
+  } catch {
+    res.status(500).json({
+      message: "Erro ao deletar espaço"
+    });
+  }
+});
+
 /* =========================
    📅 RESERVATIONS
 ========================= */
 
-// criar reserva
-app.post(
-  "/reservations",
-  async (req, res) => {
-    try {
-      const {
-        customerName,
-        phone,
-        startDateTime,
-        endDateTime,
-        spaceId
-      } = req.body;
+app.post("/reservations", async (req, res) => {
+  try {
+    const {
+      customerName,
+      phone,
+      startDateTime,
+      endDateTime,
+      spaceId
+    } = req.body;
 
-      if (
-        !customerName ||
-        !phone ||
-        !startDateTime ||
-        !endDateTime ||
-        !spaceId
-      ) {
-        return res.status(400).json({
-          message:
-            "Preencha todos os campos."
-        });
-      }
-
-      const start = new Date(
-        startDateTime
-      );
-
-      const end = new Date(
-        endDateTime
-      );
-
-      if (end <= start) {
-        return res.status(400).json({
-          message:
-            "Data/Hora término deve ser maior que início."
-        });
-      }
-
-      const reservations =
-        await Reservation.findAll({
-          where: { spaceId }
-        });
-
-      for (const item of reservations) {
-        const existingStart =
-          new Date(
-            item.startDateTime
-          );
-
-        const existingEnd =
-          new Date(
-            item.endDateTime
-          );
-
-        const hasConflict =
-          start < existingEnd &&
-          end > existingStart;
-
-        if (hasConflict) {
-          return res.status(400).json({
-            message:
-              "Este espaço já está reservado nesse horário."
-          });
-        }
-      }
-
-      const reservation =
-        await Reservation.create({
-          customerName,
-          phone,
-          startDateTime,
-          endDateTime,
-          spaceId
-        });
-
-      res.status(201).json(
-        reservation
-      );
-
-    } catch (error) {
-      console.log(error);
-
-      res.status(500).json({
-        message:
-          "Erro ao criar reserva"
+    if (
+      !customerName ||
+      !phone ||
+      !startDateTime ||
+      !endDateTime ||
+      !spaceId
+    ) {
+      return res.status(400).json({
+        message: "Preencha todos os campos."
       });
     }
-  }
-);
 
-// listar reservas
-app.get(
-  "/reservations",
-  async (req, res) => {
-    try {
-      const reservations =
-        await Reservation.findAll({
-          order: [["id", "DESC"]]
-        });
+    const start = new Date(startDateTime);
+    const end = new Date(endDateTime);
 
-      res.json(reservations);
-
-    } catch {
-      res.status(500).json({
-        message:
-          "Erro ao buscar reservas"
+    if (end <= start) {
+      return res.status(400).json({
+        message: "Data final inválida"
       });
     }
+
+    const reservations = await Reservation.findAll({
+      where: { spaceId }
+    });
+
+    for (const item of reservations) {
+      const hasConflict =
+        start < new Date(item.endDateTime) &&
+        end > new Date(item.startDateTime);
+
+      if (hasConflict) {
+        return res.status(400).json({
+          message: "Já reservado nesse horário"
+        });
+      }
+    }
+
+    const reservation = await Reservation.create(req.body);
+
+    res.status(201).json(reservation);
+
+  } catch {
+    res.status(500).json({
+      message: "Erro ao criar reserva"
+    });
   }
-);
+});
+
+app.get("/reservations", async (req, res) => {
+  try {
+    const reservations = await Reservation.findAll({
+      order: [["id", "DESC"]]
+    });
+
+    res.json(reservations);
+
+  } catch {
+    res.status(500).json({
+      message: "Erro ao buscar reservas"
+    });
+  }
+});
 
 /* =========================
    🚀 START
 ========================= */
 sequelize.sync()
   .then(() => {
-    console.log(
-      "Banco sincronizado 🚀"
-    );
+    console.log("Banco sincronizado 🚀");
 
     app.listen(8000, () => {
-      console.log(
-        "Servidor rodando na porta 8000"
-      );
+      console.log("Servidor rodando na porta 8000");
     });
   })
   .catch(console.log);

@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 
 export default function SpaceDetails() {
   const params = useParams();
-  const id = params?.id;
+  const id = params?.id || null;
 
   const [space, setSpace] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -30,7 +30,17 @@ export default function SpaceDetails() {
         `${process.env.NEXT_PUBLIC_API_URL}/spaces/${id}`
       );
 
-      const data = await res.json();
+      const text = await res.text();
+
+      let data;
+
+      try {
+        data = JSON.parse(text);
+      } catch {
+        console.error("Resposta inválida:", text);
+        setSpace(null);
+        return;
+      }
 
       if (res.ok) {
         setSpace(data);
@@ -95,6 +105,8 @@ export default function SpaceDetails() {
 
       alert("Reserva realizada com sucesso 🚀");
 
+      window.scrollTo({ top: 0, behavior: "smooth" });
+
       setShowForm(false);
 
       setForm({
@@ -121,7 +133,7 @@ export default function SpaceDetails() {
 
   if (!space) {
     return (
-      <p className="text-center mt-10">
+      <p className="text-center mt-10 text-red-500">
         Espaço não encontrado
       </p>
     );
@@ -172,7 +184,7 @@ export default function SpaceDetails() {
           {!showForm ? (
             <button
               onClick={() => setShowForm(true)}
-              className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600"
+              className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition"
             >
               Reservar Espaço
             </button>
