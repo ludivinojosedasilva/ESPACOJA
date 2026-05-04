@@ -1,13 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function Dashboard() {
+  const router = useRouter();
+
   const [user, setUser] = useState(null);
   const [spaces, setSpaces] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
   const [editingId, setEditingId] = useState(null);
 
   const [form, setForm] = useState({
@@ -22,9 +26,9 @@ export default function Dashboard() {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      window.location.replace("/login");
-      return;
-    }
+    router.push("/login");
+    return;
+    }   
 
     loadData(token);
   }, []);
@@ -35,31 +39,40 @@ export default function Dashboard() {
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/spaces`)
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/spaces`, {
+          headers: { Authorization: `Bearer ${token}` } // 🔥 CORRIGIDO
+        })
       ]);
 
       if (!profileRes.ok) {
         localStorage.removeItem("token");
-        window.location.replace("/login");
-        return;
+        router.push("/login");
+       return;
       }
 
       const profile = await profileRes.json();
+
+      if (!spacesRes.ok) {
+        toast.error("Erro ao carregar espaços");
+        setSpaces([]);
+        return;
+      }
+
       const spacesData = await spacesRes.json();
 
       setUser(profile);
       setSpaces(spacesData);
 
     } catch {
-      alert("Erro ao carregar dashboard");
+      toast.error("Erro ao carregar dashboard");
     } finally {
       setLoading(false);
     }
   }
 
   function logout() {
-    localStorage.removeItem("token");
-    window.location.replace("/login");
+  localStorage.removeItem("token");
+  router.push("/login");
   }
 
   function handleChange(e) {
@@ -80,7 +93,7 @@ export default function Dashboard() {
     }));
   }
 
-  function handleEdit(space) {
+  function startEdit(space) {
     setEditingId(space.id);
 
     setForm({
@@ -94,19 +107,56 @@ export default function Dashboard() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  async function handleDelete(id) {
-    if (!confirm("Tem certeza que deseja deletar?")) return;
+  function cancelEdit() {
+    setEditingId(null);
 
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spaces/${id}`, {
-      method: "DELETE"
+    setForm({
+      name: "",
+      description: "",
+      location: "",
+      price: "",
+      image: null
     });
+  }
 
-    setSpaces((prev) => prev.filter((s) => s.id !== id));
+  async function handleDelete(id) {
+    if (!confirm("Tem certeza que deseja excluir?")) return;
+
+    const token = localStorage.getItem("token");
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/spaces/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}` // 🔥 CORRIGIDO
+          }
+        }
+      );
+
+      if (!res.ok) {
+        toast.error("Erro ao deletar");
+        return;
+      }
+
+      setSpaces((prev) =>
+        prev.filter((space) => space.id !== id)
+      );
+
+      toast.success("Espaço deletado");
+
+    } catch {
+      toast.error("Erro ao deletar");
+    }
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (submitting) return; 
     setSubmitting(true);
+
+    const token = localStorage.getItem("token");
 
     try {
       const formData = new FormData();
@@ -120,55 +170,44 @@ export default function Dashboard() {
         formData.append("image", form.image);
       }
 
-      let res;
+      const url = editingId
+        ? `${process.env.NEXT_PUBLIC_API_URL}/spaces/${editingId}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/spaces`;
 
-      if (editingId) {
-        res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/spaces/${editingId}`,
-          {
-            method: "PUT",
-            body: formData
-          }
-        );
-      } else {
-        res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/spaces`,
-          {
-            method: "POST",
-            body: formData
-          }
-        );
-      }
+      const method = editingId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}` // 🔥 CORRIGIDO
+        },
+        body: formData
+      });
 
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Erro");
+        toast.error(data.message || "Erro");
+        setSubmitting(false);
         return;
       }
 
       if (editingId) {
         setSpaces((prev) =>
-          prev.map((s) => (s.id === editingId ? data : s))
+          prev.map((s) =>
+            s.id === editingId ? data : s
+          )
         );
-        alert("Espaço atualizado ✏️");
+        toast.success("Espaço atualizado 🚀");
       } else {
         setSpaces((prev) => [data, ...prev]);
-        alert("Espaço criado 🚀");
+        toast.success("Espaço criado 🚀");
       }
 
-      setEditingId(null);
-
-      setForm({
-        name: "",
-        description: "",
-        location: "",
-        price: "",
-        image: null
-      });
+      cancelEdit();
 
     } catch {
-      alert("Erro ao salvar");
+      toast.error("Erro ao salvar");
     } finally {
       setSubmitting(false);
     }
@@ -181,9 +220,10 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-100">
 
-      {/* HEADER */}
       <div className="bg-white shadow p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">EspaçoJá Dashboard</h1>
+        <h1 className="text-xl font-bold">
+          EspaçoJá Dashboard
+        </h1>
 
         <div className="flex items-center gap-4">
           <span>Olá, {user?.name}</span>
@@ -199,26 +239,65 @@ export default function Dashboard() {
 
       <div className="max-w-6xl mx-auto p-6">
 
-        {/* FORM */}
         <div className="bg-white p-6 rounded-2xl shadow mb-8">
 
           <h2 className="text-xl font-bold mb-4">
             {editingId ? "Editar Espaço" : "Criar Novo Espaço"}
           </h2>
 
-          <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-4">
+          <form
+            onSubmit={handleSubmit}
+            className="grid md:grid-cols-2 gap-4"
+          >
+            <input
+              name="name"
+              placeholder="Nome"
+              value={form.name}
+              onChange={handleChange}
+              className="p-3 border rounded-lg"
+              required
+            />
 
-            <input name="name" placeholder="Nome" value={form.name} onChange={handleChange} className="p-3 border rounded-lg" required />
+            <input
+              name="location"
+              placeholder="Localização"
+              value={form.location}
+              onChange={handleChange}
+              className="p-3 border rounded-lg"
+              required
+            />
 
-            <input name="location" placeholder="Localização" value={form.location} onChange={handleChange} className="p-3 border rounded-lg" required />
+            <input
+              name="price"
+              placeholder="Preço"
+              value={form.price}
+              onChange={handleChange}
+              className="p-3 border rounded-lg"
+              required
+            />
 
-            <input name="price" placeholder="Preço" value={form.price} onChange={handleChange} className="p-3 border rounded-lg" required />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFile}
+              className="p-3 border rounded-lg"
+            />
 
-            <input type="file" accept="image/*" onChange={handleFile} className="p-3 border rounded-lg" />
+            <textarea
+              name="description"
+              placeholder="Descrição"
+              value={form.description}
+              onChange={handleChange}
+              className="p-3 border rounded-lg md:col-span-2"
+              rows="4"
+              required
+            />
 
-            <textarea name="description" placeholder="Descrição" value={form.description} onChange={handleChange} className="p-3 border rounded-lg md:col-span-2" rows="4" required />
-
-            <button type="submit" disabled={submitting} className="bg-green-500 text-white p-3 rounded-lg md:col-span-2">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="bg-green-500 text-white p-3 rounded-lg md:col-span-2"
+            >
               {submitting
                 ? "Salvando..."
                 : editingId
@@ -226,60 +305,81 @@ export default function Dashboard() {
                 : "Criar Espaço"}
             </button>
 
+            {editingId && (
+              <button
+                type="button"
+                onClick={cancelEdit}
+                className="bg-gray-400 text-white p-3 rounded-lg md:col-span-2"
+              >
+                Cancelar edição
+              </button>
+            )}
           </form>
         </div>
 
-        {/* LISTA */}
         <h2 className="text-2xl font-bold mb-4">
           Espaços Disponíveis
         </h2>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        {spaces.length === 0 ? (
+          <p>Nenhum espaço cadastrado.</p>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-6">
 
-          {spaces.map((space) => (
-            <div key={space.id} className="bg-white rounded-2xl shadow overflow-hidden">
+            {spaces.map((space) => (
+              <div
+                key={space.id}
+                onClick={() => router.push(`/spaces/${space.id}`)}
+                className="bg-white rounded-2xl shadow overflow-hidden cursor-pointer hover:shadow-xl transition"
+              >
+                {space.image && (
+                  <img
+                    src={`${process.env.NEXT_PUBLIC_API_URL}${space.image}`}
+                    className="w-full h-52 object-cover"
+                  />
+                )}
 
-              <Link href={`/spaces/${space.id}`}>
-                <div className="cursor-pointer">
-                  {space.image && (
-                    <img
-                      src={`${process.env.NEXT_PUBLIC_API_URL}${space.image}`}
-                      alt={space.name}
-                      className="w-full h-52 object-cover"
-                    />
-                  )}
+                <div className="p-4">
+                  <h3 className="text-lg font-bold">
+                    {space.name}
+                  </h3>
 
-                  <div className="p-4">
-                    <h3 className="text-lg font-bold">{space.name}</h3>
-                    <p className="text-sm text-gray-600 mt-2">{space.description}</p>
-                    <p className="mt-2">📍 {space.location}</p>
-                    <p className="text-green-600 font-bold mt-2">
-                      R$ {space.price}
-                    </p>
+                  <p className="text-sm text-gray-600 mt-2">
+                    {space.description}
+                  </p>
+
+                  <p className="mt-2">
+                    📍 {space.location}
+                  </p>
+
+                  <p className="text-green-600 font-bold mt-2">
+                    R$ {space.price}
+                  </p>
+
+                  <div
+                    className="flex gap-2 mt-4"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      onClick={() => startEdit(space)}
+                      className="bg-yellow-500 text-white px-3 py-1 rounded"
+                    >
+                      Editar
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(space.id)}
+                      className="bg-red-500 text-white px-3 py-1 rounded"
+                    >
+                      Excluir
+                    </button>
                   </div>
                 </div>
-              </Link>
-
-              <div className="flex gap-2 p-4">
-                <button
-                  onClick={() => handleEdit(space)}
-                  className="bg-yellow-400 px-3 py-1 rounded"
-                >
-                  Editar
-                </button>
-
-                <button
-                  onClick={() => handleDelete(space.id)}
-                  className="bg-red-500 text-white px-3 py-1 rounded"
-                >
-                  Deletar
-                </button>
               </div>
+            ))}
 
-            </div>
-          ))}
-
-        </div>
+          </div>
+        )}
 
       </div>
     </div>

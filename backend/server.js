@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
@@ -32,9 +34,7 @@ const upload = multer({ storage });
    🌐 MIDDLEWARES
 ========================= */
 app.use(cors({
-  origin: "http://localhost:3000",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
+  origin: "http://localhost:3000"
 }));
 
 app.use(express.json());
@@ -47,26 +47,17 @@ function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
-    return res.status(401).json({
-      message: "Token não fornecido"
-    });
+    return res.status(401).json({ message: "Token não fornecido" });
   }
 
   const token = authHeader.split(" ")[1];
 
   try {
-    const decoded = jwt.verify(
-      token,
-      "segredo_super_secreto"
-    );
-
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
-
   } catch {
-    return res.status(401).json({
-      message: "Token inválido"
-    });
+    return res.status(401).json({ message: "Token inválido" });
   }
 }
 
@@ -74,9 +65,7 @@ function authMiddleware(req, res, next) {
    📌 BASE
 ========================= */
 app.get("/", (req, res) => {
-  res.json({
-    message: "API EspaçoJá funcionando 🚀"
-  });
+  res.json({ message: "API EspaçoJá funcionando 🚀" });
 });
 
 /* =========================
@@ -86,14 +75,10 @@ app.post("/users", async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    const exists = await User.findOne({
-      where: { email }
-    });
+    const exists = await User.findOne({ where: { email } });
 
     if (exists) {
-      return res.status(400).json({
-        message: "Email já cadastrado"
-      });
+      return res.status(400).json({ message: "Email já cadastrado" });
     }
 
     const hash = await bcrypt.hash(password, 10);
@@ -111,9 +96,7 @@ app.post("/users", async (req, res) => {
     });
 
   } catch {
-    res.status(500).json({
-      message: "Erro ao criar usuário"
-    });
+    res.status(500).json({ message: "Erro ao criar usuário" });
   }
 });
 
@@ -124,42 +107,28 @@ app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({
-      where: { email }
-    });
+    const user = await User.findOne({ where: { email } });
 
     if (!user) {
-      return res.status(400).json({
-        message: "Usuário não encontrado"
-      });
+      return res.status(400).json({ message: "Usuário não encontrado" });
     }
 
-    const valid = await bcrypt.compare(
-      password,
-      user.password
-    );
+    const valid = await bcrypt.compare(password, user.password);
 
     if (!valid) {
-      return res.status(400).json({
-        message: "Senha inválida"
-      });
+      return res.status(400).json({ message: "Senha inválida" });
     }
 
     const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email
-      },
-      "segredo_super_secreto",
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
     res.json({ token });
 
   } catch {
-    res.status(500).json({
-      message: "Erro no login"
-    });
+    res.status(500).json({ message: "Erro no login" });
   }
 });
 
@@ -171,9 +140,7 @@ app.get("/profile", authMiddleware, async (req, res) => {
     const user = await User.findByPk(req.user.id);
 
     if (!user) {
-      return res.status(404).json({
-        message: "Usuário não encontrado"
-      });
+      return res.status(404).json({ message: "Usuário não encontrado" });
     }
 
     res.json({
@@ -183,9 +150,7 @@ app.get("/profile", authMiddleware, async (req, res) => {
     });
 
   } catch {
-    res.status(500).json({
-      message: "Erro ao buscar perfil"
-    });
+    res.status(500).json({ message: "Erro ao buscar perfil" });
   }
 });
 
@@ -193,24 +158,23 @@ app.get("/profile", authMiddleware, async (req, res) => {
    🏠 SPACES
 ========================= */
 
-// LISTAR
-app.get("/spaces", async (req, res) => {
+// 🔒 LISTAR APENAS DO USUÁRIO
+app.get("/spaces", authMiddleware, async (req, res) => {
   try {
     const spaces = await Space.findAll({
+      where: { userId: req.user.id },
       order: [["id", "DESC"]]
     });
 
     res.json(spaces);
 
   } catch {
-    res.status(500).json({
-      message: "Erro ao buscar espaços"
-    });
+    res.status(500).json({ message: "Erro ao buscar espaços" });
   }
 });
 
 // CRIAR
-app.post("/spaces", upload.single("image"), async (req, res) => {
+app.post("/spaces", authMiddleware, upload.single("image"), async (req, res) => {
   try {
     const { name, description, location, price } = req.body;
 
@@ -225,65 +189,55 @@ app.post("/spaces", upload.single("image"), async (req, res) => {
       description,
       location,
       price,
-      image
+      image,
+      userId: req.user.id
     });
 
     res.status(201).json(space);
 
   } catch (error) {
     console.log(error);
-
-    res.status(500).json({
-      message: "Erro ao criar espaço"
-    });
+    res.status(500).json({ message: "Erro ao criar espaço" });
   }
 });
 
-// DETALHE
+// DETALHE (PÚBLICO)
 app.get("/spaces/:id", async (req, res) => {
   try {
     const space = await Space.findByPk(req.params.id);
 
     if (!space) {
-      return res.status(404).json({
-        message: "Espaço não encontrado"
-      });
+      return res.status(404).json({ message: "Espaço não encontrado" });
     }
 
     res.json(space);
 
   } catch {
-    res.status(500).json({
-      message: "Erro ao buscar espaço"
-    });
+    res.status(500).json({ message: "Erro ao buscar espaço" });
   }
 });
 
-// 🔥 UPDATE (CORRIGIDO)
-app.put("/spaces/:id", upload.single("image"), async (req, res) => {
+// UPDATE
+app.put("/spaces/:id", authMiddleware, upload.single("image"), async (req, res) => {
   try {
     const space = await Space.findByPk(req.params.id);
 
     if (!space) {
-      return res.status(404).json({
-        message: "Espaço não encontrado"
-      });
+      return res.status(404).json({ message: "Espaço não encontrado" });
     }
 
-    const { name, description, location, price } = req.body;
+    if (space.userId !== req.user.id) {
+      return res.status(403).json({ message: "Sem permissão" });
+    }
 
     let image = space.image;
 
-    // se enviar nova imagem → substitui
     if (req.file) {
       image = `/uploads/${req.file.filename}`;
     }
 
     await space.update({
-      name,
-      description,
-      location,
-      price,
+      ...req.body,
       image
     });
 
@@ -291,34 +245,29 @@ app.put("/spaces/:id", upload.single("image"), async (req, res) => {
 
   } catch (error) {
     console.log(error);
-
-    res.status(500).json({
-      message: "Erro ao atualizar espaço"
-    });
+    res.status(500).json({ message: "Erro ao atualizar espaço" });
   }
 });
 
-// 🔥 DELETE (CORRIGIDO)
-app.delete("/spaces/:id", async (req, res) => {
+// DELETE
+app.delete("/spaces/:id", authMiddleware, async (req, res) => {
   try {
     const space = await Space.findByPk(req.params.id);
 
     if (!space) {
-      return res.status(404).json({
-        message: "Espaço não encontrado"
-      });
+      return res.status(404).json({ message: "Espaço não encontrado" });
+    }
+
+    if (space.userId !== req.user.id) {
+      return res.status(403).json({ message: "Sem permissão" });
     }
 
     await space.destroy();
 
-    res.json({
-      message: "Espaço deletado com sucesso"
-    });
+    res.json({ message: "Deletado com sucesso" });
 
   } catch {
-    res.status(500).json({
-      message: "Erro ao deletar espaço"
-    });
+    res.status(500).json({ message: "Erro ao deletar espaço" });
   }
 });
 
@@ -326,6 +275,7 @@ app.delete("/spaces/:id", async (req, res) => {
    📅 RESERVATIONS
 ========================= */
 
+// CRIAR
 app.post("/reservations", async (req, res) => {
   try {
     const {
@@ -336,25 +286,15 @@ app.post("/reservations", async (req, res) => {
       spaceId
     } = req.body;
 
-    if (
-      !customerName ||
-      !phone ||
-      !startDateTime ||
-      !endDateTime ||
-      !spaceId
-    ) {
-      return res.status(400).json({
-        message: "Preencha todos os campos."
-      });
+    if (!customerName || !phone || !startDateTime || !endDateTime || !spaceId) {
+      return res.status(400).json({ message: "Preencha todos os campos" });
     }
 
     const start = new Date(startDateTime);
     const end = new Date(endDateTime);
 
     if (end <= start) {
-      return res.status(400).json({
-        message: "Data final inválida"
-      });
+      return res.status(400).json({ message: "Data inválida" });
     }
 
     const reservations = await Reservation.findAll({
@@ -367,9 +307,7 @@ app.post("/reservations", async (req, res) => {
         end > new Date(item.startDateTime);
 
       if (hasConflict) {
-        return res.status(400).json({
-          message: "Já reservado nesse horário"
-        });
+        return res.status(400).json({ message: "Já reservado nesse horário" });
       }
     }
 
@@ -378,24 +316,28 @@ app.post("/reservations", async (req, res) => {
     res.status(201).json(reservation);
 
   } catch {
-    res.status(500).json({
-      message: "Erro ao criar reserva"
-    });
+    res.status(500).json({ message: "Erro ao criar reserva" });
   }
 });
 
-app.get("/reservations", async (req, res) => {
+// 🔥 MOSTRAR APENAS FUTURAS
+app.get("/reservations/:spaceId", async (req, res) => {
   try {
+    const now = new Date();
+
     const reservations = await Reservation.findAll({
-      order: [["id", "DESC"]]
+      where: { spaceId: req.params.spaceId },
+      order: [["startDateTime", "ASC"]]
     });
 
-    res.json(reservations);
+    const futureReservations = reservations.filter(
+      r => new Date(r.endDateTime) > now
+    );
+
+    res.json(futureReservations);
 
   } catch {
-    res.status(500).json({
-      message: "Erro ao buscar reservas"
-    });
+    res.status(500).json({ message: "Erro ao buscar reservas" });
   }
 });
 
@@ -406,8 +348,8 @@ sequelize.sync()
   .then(() => {
     console.log("Banco sincronizado 🚀");
 
-    app.listen(8000, () => {
-      console.log("Servidor rodando na porta 8000");
+    app.listen(process.env.PORT || 8000, () => {
+      console.log(`Servidor rodando na porta ${process.env.PORT || 8000}`);
     });
   })
   .catch(console.log);

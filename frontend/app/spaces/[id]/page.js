@@ -5,10 +5,12 @@ import { useParams } from "next/navigation";
 
 export default function SpaceDetails() {
   const params = useParams();
-  const id = params?.id || null;
+  const id = params?.id;
 
   const [space, setSpace] = useState(null);
+  const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const [showForm, setShowForm] = useState(false);
   const [sending, setSending] = useState(false);
 
@@ -21,32 +23,23 @@ export default function SpaceDetails() {
 
   useEffect(() => {
     if (!id) return;
-    loadSpace();
+    loadData();
   }, [id]);
 
-  async function loadSpace() {
+  async function loadData() {
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/spaces/${id}`
-      );
+      const [spaceRes, reservationsRes] = await Promise.all([
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/spaces/${id}`),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/reservations/${id}`)
+      ]);
 
-      const text = await res.text();
+      const spaceData = await spaceRes.json();
+      const reservationsData = await reservationsRes.json();
 
-      let data;
+      if (spaceRes.ok) setSpace(spaceData);
+      else setSpace(null);
 
-      try {
-        data = JSON.parse(text);
-      } catch {
-        console.error("Resposta inválida:", text);
-        setSpace(null);
-        return;
-      }
-
-      if (res.ok) {
-        setSpace(data);
-      } else {
-        setSpace(null);
-      }
+      if (reservationsRes.ok) setReservations(reservationsData);
 
     } catch (error) {
       console.log(error);
@@ -72,7 +65,7 @@ export default function SpaceDetails() {
     const end = new Date(form.endDateTime);
 
     if (end <= start) {
-      alert("Data/Hora término deve ser maior que início.");
+      alert("Data inválida");
       return;
     }
 
@@ -87,10 +80,7 @@ export default function SpaceDetails() {
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            customerName: form.customerName,
-            phone: form.phone,
-            startDateTime: form.startDateTime,
-            endDateTime: form.endDateTime,
+            ...form,
             spaceId: id
           })
         }
@@ -99,13 +89,11 @@ export default function SpaceDetails() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Erro ao criar reserva");
+        alert(data.message);
         return;
       }
 
-      alert("Reserva realizada com sucesso 🚀");
-
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      alert("Reserva criada 🚀");
 
       setShowForm(false);
 
@@ -116,7 +104,10 @@ export default function SpaceDetails() {
         endDateTime: ""
       });
 
-    } catch (error) {
+      // 🔥 Atualiza lista após reservar
+      loadData();
+
+    } catch {
       alert("Erro ao reservar");
     } finally {
       setSending(false);
@@ -124,34 +115,21 @@ export default function SpaceDetails() {
   }
 
   if (loading) {
-    return (
-      <p className="text-center mt-10">
-        Carregando...
-      </p>
-    );
+    return <p className="text-center mt-10">Carregando...</p>;
   }
 
   if (!space) {
-    return (
-      <p className="text-center mt-10 text-red-500">
-        Espaço não encontrado
-      </p>
-    );
+    return <p className="text-center mt-10">Espaço não encontrado</p>;
   }
-
-  const now = new Date()
-    .toISOString()
-    .slice(0, 16);
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
 
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow overflow-hidden">
+      <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow overflow-hidden">
 
         {space.image && (
           <img
             src={`${process.env.NEXT_PUBLIC_API_URL}${space.image}`}
-            alt={space.name}
             className="w-full h-80 object-cover"
           />
         )}
@@ -162,97 +140,99 @@ export default function SpaceDetails() {
             onClick={() => window.history.back()}
             className="text-blue-500 mb-6 hover:underline"
           >
-            ← Voltar
-          </button>
+          ⬅️ Voltar
+        </button>
 
-          <h1 className="text-3xl font-bold mb-4">
-            {space.name}
-          </h1>
+          <h1 className="text-3xl font-bold">{space.name}</h1>
+          <p className="text-gray-600 mt-2">{space.description}</p>
 
-          <p className="text-gray-600 mb-4">
-            {space.description}
-          </p>
+          <p className="mt-4">📍 {space.location}</p>
 
-          <p className="mb-2">
-            📍 {space.location}
-          </p>
-
-          <p className="text-green-600 text-2xl font-bold mb-8">
+          <p className="text-green-600 text-2xl font-bold mt-2">
             R$ {space.price}
           </p>
 
+          {/* 🔥 RESERVAS */}
+          <div className="mt-8">
+            <h2 className="text-xl font-bold mb-3">
+              Reservas existentes
+            </h2>
+
+            {reservations.length === 0 ? (
+              <p className="text-gray-500">
+                Nenhuma reserva ainda
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {reservations.map((r) => (
+                  <li
+                    key={r.id}
+                    className="bg-gray-100 p-3 rounded"
+                  >
+                    <strong>{r.customerName}</strong><br />
+                    {new Date(r.startDateTime).toLocaleString()} →{" "}
+                    {new Date(r.endDateTime).toLocaleString()}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* BOTÃO */}
           {!showForm ? (
             <button
               onClick={() => setShowForm(true)}
-              className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition"
+              className="mt-6 w-full bg-blue-500 text-white p-3 rounded-lg"
             >
               Reservar Espaço
             </button>
           ) : (
-            <form
-              onSubmit={handleReserve}
-              className="grid gap-4"
-            >
+            <form onSubmit={handleReserve} className="mt-6 space-y-3">
+
               <input
-                type="text"
                 name="customerName"
-                placeholder="Seu nome"
+                placeholder="Nome"
                 value={form.customerName}
                 onChange={handleChange}
-                className="p-3 border rounded-lg"
+                className="p-3 border rounded w-full"
                 required
               />
 
               <input
-                type="text"
                 name="phone"
                 placeholder="Telefone"
                 value={form.phone}
                 onChange={handleChange}
-                className="p-3 border rounded-lg"
+                className="p-3 border rounded w-full"
                 required
               />
 
-              <div>
-                <label className="block mb-1 font-medium">
-                  Data/Hora Início
-                </label>
+              <input
+                type="datetime-local"
+                name="startDateTime"
+                value={form.startDateTime}
+                onChange={handleChange}
+                className="p-3 border rounded w-full"
+                required
+              />
 
-                <input
-                  type="datetime-local"
-                  name="startDateTime"
-                  min={now}
-                  value={form.startDateTime}
-                  onChange={handleChange}
-                  className="p-3 border rounded-lg w-full"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block mb-1 font-medium">
-                  Data/Hora Término
-                </label>
-
-                <input
-                  type="datetime-local"
-                  name="endDateTime"
-                  value={form.endDateTime}
-                  onChange={handleChange}
-                  className="p-3 border rounded-lg w-full"
-                  required
-                />
-              </div>
+              <input
+                type="datetime-local"
+                name="endDateTime"
+                value={form.endDateTime}
+                onChange={handleChange}
+                className="p-3 border rounded w-full"
+                required
+              />
 
               <button
                 type="submit"
                 disabled={sending}
-                className="bg-green-500 text-white p-3 rounded-lg disabled:opacity-50"
+                className="bg-green-500 text-white p-3 rounded w-full"
               >
-                {sending
-                  ? "Reservando..."
-                  : "Confirmar Reserva"}
+                {sending ? "Reservando..." : "Confirmar"}
               </button>
+
             </form>
           )}
 
