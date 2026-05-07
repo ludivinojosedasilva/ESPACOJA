@@ -23,6 +23,7 @@ export default function SpaceDetails() {
 
   useEffect(() => {
     if (!id) return;
+
     loadData();
   }, [id]);
 
@@ -36,14 +37,20 @@ export default function SpaceDetails() {
       const spaceData = await spaceRes.json();
       const reservationsData = await reservationsRes.json();
 
-      if (spaceRes.ok) setSpace(spaceData);
-      else setSpace(null);
+      if (spaceRes.ok) {
+        setSpace(spaceData);
+      } else {
+        setSpace(null);
+      }
 
-      if (reservationsRes.ok) setReservations(reservationsData);
+      if (reservationsRes.ok) {
+        setReservations(reservationsData);
+      }
 
     } catch (error) {
       console.log(error);
       setSpace(null);
+
     } finally {
       setLoading(false);
     }
@@ -69,6 +76,13 @@ export default function SpaceDetails() {
       return;
     }
 
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Faça login para reservar");
+      return;
+    }
+
     setSending(true);
 
     try {
@@ -76,12 +90,18 @@ export default function SpaceDetails() {
         `${process.env.NEXT_PUBLIC_API_URL}/reservations`,
         {
           method: "POST",
+
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
           },
+
           body: JSON.stringify({
-            ...form,
-            spaceId: id
+            customerName: form.customerName,
+            phone: form.phone,
+            startDateTime: form.startDateTime,
+            endDateTime: form.endDateTime,
+            spaceId: space.id
           })
         }
       );
@@ -89,13 +109,11 @@ export default function SpaceDetails() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message);
+        alert(data.message || "Erro ao reservar");
         return;
       }
 
-      alert("Reserva criada 🚀");
-
-      setShowForm(false);
+      alert("Reserva criada com sucesso!");
 
       setForm({
         customerName: "",
@@ -104,22 +122,33 @@ export default function SpaceDetails() {
         endDateTime: ""
       });
 
-      // 🔥 Atualiza lista após reservar
+      setShowForm(false);
+
       loadData();
 
-    } catch {
+    } catch (error) {
+      console.log(error);
       alert("Erro ao reservar");
+
     } finally {
       setSending(false);
     }
   }
 
   if (loading) {
-    return <p className="text-center mt-10">Carregando...</p>;
+    return (
+      <p className="text-center mt-10">
+        Carregando...
+      </p>
+    );
   }
 
   if (!space) {
-    return <p className="text-center mt-10">Espaço não encontrado</p>;
+    return (
+      <p className="text-center mt-10">
+        Espaço não encontrado
+      </p>
+    );
   }
 
   return (
@@ -130,6 +159,7 @@ export default function SpaceDetails() {
         {space.image && (
           <img
             src={`${process.env.NEXT_PUBLIC_API_URL}${space.image}`}
+            alt={space.name}
             className="w-full h-80 object-cover"
           />
         )}
@@ -140,20 +170,28 @@ export default function SpaceDetails() {
             onClick={() => window.history.back()}
             className="text-blue-500 mb-6 hover:underline"
           >
-          ⬅️ Voltar
-        </button>
+            ⬅️ Voltar
+          </button>
 
-          <h1 className="text-3xl font-bold">{space.name}</h1>
-          <p className="text-gray-600 mt-2">{space.description}</p>
+          <h1 className="text-3xl font-bold">
+            {space.name}
+          </h1>
 
-          <p className="mt-4">📍 {space.location}</p>
+          <p className="text-gray-600 mt-2">
+            {space.description}
+          </p>
+
+          <p className="mt-4">
+            📍 {space.location}
+          </p>
 
           <p className="text-green-600 text-2xl font-bold mt-2">
             R$ {space.price}
           </p>
 
-          {/* 🔥 RESERVAS */}
+          {/* RESERVAS */}
           <div className="mt-8">
+
             <h2 className="text-xl font-bold mb-3">
               Reservas existentes
             </h2>
@@ -164,30 +202,45 @@ export default function SpaceDetails() {
               </p>
             ) : (
               <ul className="space-y-2">
+
                 {reservations.map((r) => (
                   <li
                     key={r.id}
                     className="bg-gray-100 p-3 rounded"
                   >
-                    <strong>{r.customerName}</strong><br />
-                    {new Date(r.startDateTime).toLocaleString()} →{" "}
+                    <strong>
+                      {r.customerName}
+                    </strong>
+
+                    <br />
+
+                    {new Date(r.startDateTime).toLocaleString()}
+                    {" → "}
                     {new Date(r.endDateTime).toLocaleString()}
                   </li>
                 ))}
+
               </ul>
             )}
+
           </div>
 
           {/* BOTÃO */}
           {!showForm ? (
+
             <button
               onClick={() => setShowForm(true)}
               className="mt-6 w-full bg-blue-500 text-white p-3 rounded-lg"
             >
               Reservar Espaço
             </button>
+
           ) : (
-            <form onSubmit={handleReserve} className="mt-6 space-y-3">
+
+            <form
+              onSubmit={handleReserve}
+              className="mt-6 space-y-3"
+            >
 
               <input
                 name="customerName"
@@ -234,6 +287,7 @@ export default function SpaceDetails() {
               </button>
 
             </form>
+
           )}
 
         </div>
