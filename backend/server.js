@@ -13,6 +13,34 @@ const User = require("./models/User");
 const Space = require("./models/Space");
 const Reservation = require("./models/Reservation");
 
+/* =========================
+   🔗 RELACIONAMENTOS
+========================= */
+
+User.hasMany(Space, {
+  foreignKey: "userId"
+});
+
+Space.belongsTo(User, {
+  foreignKey: "userId"
+});
+
+User.hasMany(Reservation, {
+  foreignKey: "userId"
+});
+
+Reservation.belongsTo(User, {
+  foreignKey: "userId"
+});
+
+Space.hasMany(Reservation, {
+  foreignKey: "spaceId"
+});
+
+Reservation.belongsTo(Space, {
+  foreignKey: "spaceId"
+});
+
 const app = express();
 
 /* =========================
@@ -440,7 +468,11 @@ app.post("/reservations", authMiddleware, async (req, res) => {
     }
 
     const reservation = await Reservation.create({
-      ...req.body,
+      customerName,
+      phone,
+      startDateTime,
+      endDateTime,
+      spaceId,
       userId: req.user.id
     });
 
@@ -472,6 +504,41 @@ app.get("/reservations/:spaceId", async (req, res) => {
     );
 
     res.json(futureReservations);
+
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: "Erro ao buscar reservas"
+    });
+  }
+});
+
+
+
+/* =========================
+   👤 MINHAS RESERVAS
+========================= */
+
+app.get("/my-reservations", authMiddleware, async (req, res) => {
+  try {
+
+    const reservations = await Reservation.findAll({
+      where: {
+        userId: req.user.id
+      },
+
+      include: [
+        {
+          model: Space,
+          attributes: ["id", "name", "location", "image", "price"]
+        }
+      ],
+
+      order: [["startDateTime", "DESC"]]
+    });
+
+    res.json(reservations);
 
   } catch (error) {
     console.log(error);
