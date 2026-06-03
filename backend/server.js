@@ -553,7 +553,7 @@ app.get("/my-reservations", authMiddleware, async (req, res) => {
    🚀 START
 ========================= */
 
-sequelize.sync()
+sequelize.authenticate()
   .then(() => {
     console.log("Banco sincronizado 🚀");
 
