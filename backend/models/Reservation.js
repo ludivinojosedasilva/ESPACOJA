@@ -28,12 +28,26 @@ const Reservation = sequelize.define("Reservation", {
     allowNull: false
   },
 
+  valorTotal: {
+    type: DataTypes.FLOAT,
+    allowNull: true
+  },
+
+  status: {
+    type: DataTypes.ENUM(
+      "PENDENTE",
+      "CONFIRMADA",
+      "CANCELADA",
+      "FINALIZADA"
+    ),
+    defaultValue: "PENDENTE"
+  },
+
   spaceId: {
     type: DataTypes.INTEGER,
     allowNull: false
   },
 
-  // 🔥 IMPORTANTE (SEGURANÇA)
   userId: {
     type: DataTypes.INTEGER,
     allowNull: false

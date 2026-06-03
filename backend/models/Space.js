@@ -36,6 +36,11 @@ const Space = sequelize.define("Space", {
   userId: {
     type: DataTypes.INTEGER,
     allowNull: false
+  },
+
+  tipoEspacoId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
   }
 });
 
