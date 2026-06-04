@@ -5,53 +5,54 @@ const Reservation = sequelize.define("Reservation", {
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
-    primaryKey: true
+    primaryKey: true,
+    field: "id_reserva"
   },
-
-  customerName: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-
-  phone: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-
   startDateTime: {
     type: DataTypes.DATE,
-    allowNull: false
+    allowNull: false,
+    field: "data_hora_inicio"
   },
-
   endDateTime: {
     type: DataTypes.DATE,
-    allowNull: false
+    allowNull: false,
+    field: "data_hora_fim"
   },
-
-  valorTotal: {
-    type: DataTypes.FLOAT,
-    allowNull: true
-  },
-
   status: {
-    type: DataTypes.ENUM(
-      "PENDENTE",
-      "CONFIRMADA",
-      "CANCELADA",
-      "FINALIZADA"
-    ),
+    type: DataTypes.ENUM("PENDENTE", "CONFIRMADA", "CANCELADA", "FINALIZADA"),
     defaultValue: "PENDENTE"
   },
-
+  valorTotal: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    defaultValue: 0,
+    field: "valor_total"
+  },
+  valorDesconto: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    defaultValue: 0,
+    field: "valor_desconto"
+  },
+  valorMulta: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    defaultValue: 0,
+    field: "valor_multa"
+  },
   spaceId: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
+    field: "id_espaco"
   },
-
   userId: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
+    field: "id_locatario"
   }
+}, {
+  tableName: "reserva",
+  timestamps: false
 });
 
 module.exports = Reservation;
