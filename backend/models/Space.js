@@ -28,11 +28,6 @@ const Space = sequelize.define("Space", {
     allowNull: false,
     field: "valor_hora"
   },
-  image: {
-    type: DataTypes.STRING,
-    allowNull: true,
-    field: "imagem"
-  },
   comodidades: {
     type: DataTypes.TEXT,
     allowNull: true

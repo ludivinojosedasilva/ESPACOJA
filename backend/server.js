@@ -1,4 +1,5 @@
 require("dotenv").config();
+const Groq = require("groq-sdk");
 
 const express   = require("express");
 const cors      = require("cors");
@@ -19,6 +20,7 @@ const TipoEspaco     = require("./models/TipoEspaco");
 const FormaPagamento = require("./models/FormaPagamento");
 const Nota           = require("./models/Nota");
 const Pagamento      = require("./models/Pagamento");
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // ── RELACIONAMENTOS ───────────────────────────────────────────
 // Proprietário → Espaço
@@ -741,6 +743,90 @@ app.get("/consultas/reservas-por-mes", async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Erro na consulta 3", error: error.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// 🤖 IA GENERATIVA - Integração com Google Gemini
+// Sugestão de preço competitivo para proprietários
+// Adicione estas linhas no seu server.js
+// ═══════════════════════════════════════════════════════════════
+
+// 1. Adicione este import no TOPO do server.js (junto com os outros requires):
+// const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+// 2. Adicione esta inicialização logo após os imports:
+// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+// 3. Adicione esta rota no server.js (antes do sequelize.authenticate()):
+
+app.post("/ia/sugerir-preco", async (req, res) => {
+  try {
+    const { nome, tipo, endereco, comodidades, descricao } = req.body;
+
+    if (!nome || !tipo || !endereco) {
+      return res.status(400).json({
+        message: "Informe nome, tipo e endereço do espaço"
+      });
+    }
+
+    // Busca espaços similares no banco para dar contexto à IA
+    const espacosSimilares = await Space.findAll({
+      include: [{ model: TipoEspaco, attributes: ["nome"] }],
+      limit: 5,
+      order: sequelize.random()
+    });
+
+    const contextoBanco = espacosSimilares.map(e =>
+      `- ${e.name} (${e.TipoEspaco?.nome || "Sem tipo"}): R$${e.price}/hora em ${e.location}`
+    ).join("\n");
+
+    // Monta o prompt para o Gemini
+    const prompt = `
+Você é um especialista em precificação de espaços para eventos e locação temporária no Brasil.
+
+Um proprietário quer saber o preço competitivo por hora para o seguinte espaço:
+
+ESPAÇO A PRECIFICAR:
+- Nome: ${nome}
+- Tipo: ${tipo}
+- Localização: ${endereco}
+- Comodidades: ${comodidades || "Não informadas"}
+- Descrição: ${descricao || "Não informada"}
+
+ESPAÇOS SIMILARES JÁ CADASTRADOS NA PLATAFORMA:
+${contextoBanco}
+
+Com base nessas informações, responda em português com:
+1. **Preço sugerido por hora** (valor em reais)
+2. **Faixa de preço recomendada** (mínimo e máximo)
+3. **Justificativa** (3 linhas explicando o raciocínio)
+4. **Dicas para aumentar o valor** (2 sugestões práticas)
+
+Seja direto e objetivo. Use dados reais do mercado brasileiro.
+    `.trim();
+
+    // Chama a API do G
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+      max_tokens: 1024
+    });
+    const texto = completion.choices[0].message.content;;
+
+    res.json({
+      sugestao: texto,
+      espacoAnalisado: { nome, tipo, endereco, comodidades },
+      espacosReferencia: espacosSimilares.length
+    });
+
+  } catch (error) {
+    console.error("Erro na IA:", error);
+    res.status(500).json({
+      message: "Erro ao consultar IA",
+      error: error.message
+    });
   }
 });
 
