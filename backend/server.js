@@ -158,6 +158,7 @@ app.post("/users", async (req, res) => {
     } else if (tipoUsuario === "LOCATARIO") {
       await sequelize.query(`INSERT INTO locatario (id_usuario) VALUES (${user.id})`);
     }
+    res.status(201).json({ id: user.id, name: user.name, email: user.email, tipoUsuario: user.tipoUsuario });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Erro ao criar usuário" });
