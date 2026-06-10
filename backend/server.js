@@ -150,8 +150,14 @@ app.post("/users", async (req, res) => {
     if (exists) return res.status(400).json({ message: "Email já cadastrado" });
 
     const hash = await bcrypt.hash(password, 10);
-    const user = await User.create({ name, email, password: hash, telefone, tipoUsuario, tipoPessoa, cpf, cnpj });
-    res.status(201).json({ id: user.id, name: user.name, email: user.email, tipoUsuario: user.tipoUsuario });
+    const user = await User.create({ name, email, password: hash, telefone, tipoUsuario });
+
+    // Insere na tabela de herança conforme o tipo
+    if (tipoUsuario === "PROPRIETARIO") {
+      await sequelize.query(`INSERT INTO proprietario (id_usuario) VALUES (${user.id})`);
+    } else if (tipoUsuario === "LOCATARIO") {
+      await sequelize.query(`INSERT INTO locatario (id_usuario) VALUES (${user.id})`);
+    }
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Erro ao criar usuário" });

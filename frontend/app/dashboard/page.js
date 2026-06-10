@@ -2,385 +2,197 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
+import Link from "next/link";
+import Navbar from "../components/Navbar";
 
 export default function Dashboard() {
   const router = useRouter();
-
-  const [user, setUser] = useState(null);
   const [spaces, setSpaces] = useState([]);
+  const [allSpaces, setAllSpaces] = useState([]);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-
-  const [editingId, setEditingId] = useState(null);
-
-  const [form, setForm] = useState({
-    name: "",
-    description: "",
-    location: "",
-    price: "",
-    image: null
-  });
+  const [aba, setAba] = useState("todos");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-
-    if (!token) {
-    router.push("/login");
-    return;
-    }   
-
+    if (!token) { router.push("/login"); return; }
     loadData(token);
   }, []);
 
   async function loadData(token) {
     try {
-      const [profileRes, spacesRes] = await Promise.all([
+      const [profileRes, mySpacesRes, allSpacesRes] = await Promise.all([
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/spaces`, {
-          headers: { Authorization: `Bearer ${token}` } // 🔥 CORRIGIDO
-        })
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/spaces/todos`)
       ]);
 
-      if (!profileRes.ok) {
-        localStorage.removeItem("token");
-        router.push("/login");
-       return;
-      }
+      if (!profileRes.ok) { router.push("/login"); return; }
 
-      const profile = await profileRes.json();
+      const profileData = await profileRes.json();
+      const mySpacesData = mySpacesRes.ok ? await mySpacesRes.json() : [];
+      const allSpacesData = allSpacesRes.ok ? await allSpacesRes.json() : [];
 
-      if (!spacesRes.ok) {
-        toast.error("Erro ao carregar espaços");
-        setSpaces([]);
-        return;
-      }
-
-      const spacesData = await spacesRes.json();
-
-      setUser(profile);
-      setSpaces(spacesData);
-
+      setUser(profileData);
+      setSpaces(mySpacesData);
+      setAllSpaces(allSpacesData);
     } catch {
-      toast.error("Erro ao carregar dashboard");
+      router.push("/login");
     } finally {
       setLoading(false);
     }
   }
 
-  function logout() {
-  localStorage.removeItem("token");
-  router.push("/login");
-  }
-
-  function handleChange(e) {
-    const { name, value } = e.target;
-
-    setForm((prev) => ({
-      ...prev,
-      [name]: value
-    }));
-  }
-
-  function handleFile(e) {
-    const file = e.target.files[0];
-
-    setForm((prev) => ({
-      ...prev,
-      image: file
-    }));
-  }
-
-  function startEdit(space) {
-    setEditingId(space.id);
-
-    setForm({
-      name: space.name,
-      description: space.description,
-      location: space.location,
-      price: space.price,
-      image: null
-    });
-
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  function cancelEdit() {
-    setEditingId(null);
-
-    setForm({
-      name: "",
-      description: "",
-      location: "",
-      price: "",
-      image: null
-    });
-  }
-
   async function handleDelete(id) {
-    if (!confirm("Tem certeza que deseja excluir?")) return;
-
+    if (!confirm("Deseja excluir este espaco?")) return;
     const token = localStorage.getItem("token");
-
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/spaces/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}` // 🔥 CORRIGIDO
-          }
-        }
-      );
-
-      if (!res.ok) {
-        toast.error("Erro ao deletar");
-        return;
-      }
-
-      setSpaces((prev) =>
-        prev.filter((space) => space.id !== id)
-      );
-
-      toast.success("Espaço deletado");
-
-    } catch {
-      toast.error("Erro ao deletar");
-    }
-  }
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (submitting) return; 
-    setSubmitting(true);
-
-    const token = localStorage.getItem("token");
-
-    try {
-      const formData = new FormData();
-
-      formData.append("name", form.name);
-      formData.append("description", form.description);
-      formData.append("location", form.location);
-      formData.append("price", form.price);
-
-      if (form.image) {
-        formData.append("image", form.image);
-      }
-
-      const url = editingId
-        ? `${process.env.NEXT_PUBLIC_API_URL}/spaces/${editingId}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/spaces`;
-
-      const method = editingId ? "PUT" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          Authorization: `Bearer ${token}` // 🔥 CORRIGIDO
-        },
-        body: formData
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        toast.error(data.message || "Erro");
-        setSubmitting(false);
-        return;
-      }
-
-      if (editingId) {
-        setSpaces((prev) =>
-          prev.map((s) =>
-            s.id === editingId ? data : s
-          )
-        );
-        toast.success("Espaço atualizado 🚀");
-      } else {
-        setSpaces((prev) => [data, ...prev]);
-        toast.success("Espaço criado 🚀");
-      }
-
-      cancelEdit();
-
-    } catch {
-      toast.error("Erro ao salvar");
-    } finally {
-      setSubmitting(false);
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spaces/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) {
+      setSpaces((prev) => prev.filter((s) => s.id !== id));
+      setAllSpaces((prev) => prev.filter((s) => s.id !== id));
+    } else {
+      alert("Erro ao excluir espaco");
     }
   }
 
   if (loading) {
-    return <p className="text-center mt-10">Carregando...</p>;
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <p className="text-gray-500 text-lg">Carregando...</p>
+      </div>
+    );
   }
+
+  const isProprietario = user?.tipoUsuario === "PROPRIETARIO";
+  const displaySpaces = aba === "meus" ? spaces : allSpaces;
 
   return (
     <div className="min-h-screen bg-gray-100">
+      <Navbar />
 
-      <div className="bg-white shadow p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">
-          EspaçoJá Dashboard
-        </h1>
+      <div className="max-w-6xl mx-auto px-6 py-10">
 
-        <div className="flex items-center gap-4">
-          <span>Olá, {user?.name}</span>
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">
+              Ola, {user?.name?.split(" ")[0]}!
+            </h1>
+            <p className="text-gray-500 mt-1">
+              {isProprietario
+                ? "Gerencie seus espacos ou explore outros disponiveis"
+                : "Explore os espacos disponiveis para reservar"}
+            </p>
+          </div>
 
-          <button
-            onClick={logout}
-            className="bg-red-500 text-white px-4 py-2 rounded-lg"
-          >
-            Sair
-          </button>
-        </div>
-      </div>
-
-      <div className="max-w-6xl mx-auto p-6">
-
-        <div className="bg-white p-6 rounded-2xl shadow mb-8">
-
-          <h2 className="text-xl font-bold mb-4">
-            {editingId ? "Editar Espaço" : "Criar Novo Espaço"}
-          </h2>
-
-          <form
-            onSubmit={handleSubmit}
-            className="grid md:grid-cols-2 gap-4"
-          >
-            <input
-              name="name"
-              placeholder="Nome"
-              value={form.name}
-              onChange={handleChange}
-              className="p-3 border rounded-lg"
-              required
-            />
-
-            <input
-              name="location"
-              placeholder="Localização"
-              value={form.location}
-              onChange={handleChange}
-              className="p-3 border rounded-lg"
-              required
-            />
-
-            <input
-              name="price"
-              placeholder="Preço"
-              value={form.price}
-              onChange={handleChange}
-              className="p-3 border rounded-lg"
-              required
-            />
-
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFile}
-              className="p-3 border rounded-lg"
-            />
-
-            <textarea
-              name="description"
-              placeholder="Descrição"
-              value={form.description}
-              onChange={handleChange}
-              className="p-3 border rounded-lg md:col-span-2"
-              rows="4"
-              required
-            />
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="bg-green-500 text-white p-3 rounded-lg md:col-span-2"
+          {isProprietario && (
+            <Link
+              href="/spaces/new"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl transition"
             >
-              {submitting
-                ? "Salvando..."
-                : editingId
-                ? "Atualizar Espaço"
-                : "Criar Espaço"}
-            </button>
-
-            {editingId && (
-              <button
-                type="button"
-                onClick={cancelEdit}
-                className="bg-gray-400 text-white p-3 rounded-lg md:col-span-2"
-              >
-                Cancelar edição
-              </button>
-            )}
-          </form>
+              + Cadastrar Espaco
+            </Link>
+          )}
         </div>
 
-        <h2 className="text-2xl font-bold mb-4">
-          Espaços Disponíveis
-        </h2>
+        <div className="flex gap-3 mb-6">
+          <button
+            onClick={() => setAba("todos")}
+            className={`px-5 py-2 rounded-full font-medium transition ${
+              aba === "todos"
+                ? "bg-blue-600 text-white"
+                : "bg-white text-gray-600 border border-gray-300"
+            }`}
+          >
+            Todos os Espacos ({allSpaces.length})
+          </button>
+          {isProprietario && (
+            <button
+              onClick={() => setAba("meus")}
+              className={`px-5 py-2 rounded-full font-medium transition ${
+                aba === "meus"
+                  ? "bg-blue-600 text-white"
+                  : "bg-white text-gray-600 border border-gray-300"
+              }`}
+            >
+              Meus Espacos ({spaces.length})
+            </button>
+          )}
+        </div>
 
-        {spaces.length === 0 ? (
-          <p>Nenhum espaço cadastrado.</p>
+        {displaySpaces.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow p-12 text-center text-gray-400">
+            <p className="text-5xl mb-3">🏗</p>
+            <p className="text-lg">Nenhum espaco encontrado.</p>
+          </div>
         ) : (
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {displaySpaces.map((space) => {
+              const imageUrl = space.image
+                ? `${process.env.NEXT_PUBLIC_API_URL}${space.image}`
+                : null;
 
-            {spaces.map((space) => (
-              <div
-                key={space.id}
-                onClick={() => router.push(`/spaces/${space.id}`)}
-                className="bg-white rounded-2xl shadow overflow-hidden cursor-pointer hover:shadow-xl transition"
-              >
-                {space.image && (
-                  <img
-                    src={`${process.env.NEXT_PUBLIC_API_URL}${space.image}`}
-                    className="w-full h-52 object-cover"
-                  />
-                )}
+              return (
+                <div key={space.id} className="bg-white rounded-2xl shadow hover:shadow-lg transition overflow-hidden">
+                  {imageUrl ? (
+                    <img src={imageUrl} alt={space.name} className="w-full h-48 object-cover" />
+                  ) : (
+                    <div className="w-full h-48 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                      <span className="text-6xl">🏢</span>
+                    </div>
+                  )}
 
-                <div className="p-4">
-                  <h3 className="text-lg font-bold">
-                    {space.name}
-                  </h3>
+                  <div className="p-5">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <h3 className="font-bold text-gray-800 text-lg">{space.name}</h3>
+                      {space.TipoEspaco && (
+                        <span className="text-xs bg-blue-100 text-blue-700 font-bold px-2 py-1 rounded-full">
+                          {space.TipoEspaco.nome}
+                        </span>
+                      )}
+                    </div>
 
-                  <p className="text-sm text-gray-600 mt-2">
-                    {space.description}
-                  </p>
+                    <p className="text-gray-500 text-sm mb-1">📍 {space.location}</p>
 
-                  <p className="mt-2">
-                    📍 {space.location}
-                  </p>
+                    {space.comodidades && (
+                      <p className="text-gray-400 text-xs mb-3 truncate">✨ {space.comodidades}</p>
+                    )}
 
-                  <p className="text-green-600 font-bold mt-2">
-                    R$ {space.price}
-                  </p>
+                    <div className="flex items-center justify-between mt-3">
+                      <p className="text-green-600 font-bold text-lg">
+                        R$ {parseFloat(space.price).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        <span className="text-gray-400 text-sm font-normal">/h</span>
+                      </p>
 
-                  <div
-                    className="flex gap-2 mt-4"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      onClick={() => startEdit(space)}
-                      className="bg-yellow-500 text-white px-3 py-1 rounded"
-                    >
-                      Editar
-                    </button>
-
-                    <button
-                      onClick={() => handleDelete(space.id)}
-                      className="bg-red-500 text-white px-3 py-1 rounded"
-                    >
-                      Excluir
-                    </button>
+                      <div className="flex gap-2">
+                        <Link
+                          href={`/spaces/${space.id}`}
+                          className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition"
+                        >
+                          Ver
+                        </Link>
+                        {aba === "meus" && (
+                          <button
+                            onClick={() => handleDelete(space.id)}
+                            className="bg-red-100 hover:bg-red-200 text-red-600 text-sm px-3 py-2 rounded-lg transition"
+                          >
+                            🗑
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-
+              );
+            })}
           </div>
         )}
-
       </div>
     </div>
   );
