@@ -158,7 +158,6 @@ app.post("/users", async (req, res) => {
     } else if (tipoUsuario === "LOCATARIO") {
       await sequelize.query(`INSERT INTO locatario (id_usuario) VALUES (${user.id})`);
     }
-    res.status(201).json({ id: user.id, name: user.name, email: user.email, tipoUsuario: user.tipoUsuario });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Erro ao criar usuário" });
@@ -466,6 +465,7 @@ app.get("/my-reservations", authMiddleware, async (req, res) => {
     });
     res.json(reservations);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: "Erro ao buscar reservas" });
   }
 });
@@ -688,16 +688,16 @@ app.get("/consultas/receita-por-tipo", async (req, res) => {
   try {
     const resultado = await sequelize.query(`
       SELECT
-        te.nome                  AS tipo_espaco,
-        COUNT(p.id)              AS total_pagamentos,
-        SUM(p.valorPagamento)    AS total_arrecadado
-      FROM TipoEspacos    te
-      JOIN Spaces         e  ON e.tipoEspacoId  = te.id
-      JOIN Reservations   r  ON r.spaceId        = e.id
-      JOIN Notas          n  ON n.reservationId  = r.id
-      JOIN Pagamentos     p  ON p.notaId         = n.id
+        te.nome                        AS tipo_espaco,
+        COUNT(p.id_pagamento)          AS total_pagamentos,
+        SUM(p.valor_pagamento)         AS total_arrecadado
+      FROM tipo_espaco te
+      JOIN espaco      e  ON e.id_tipo    = te.id_tipo
+      JOIN reserva     r  ON r.id_espaco  = e.id_espaco
+      JOIN nota        n  ON n.id_reserva = r.id_reserva
+      JOIN pagamento   p  ON p.id_nota    = n.id_nota
       WHERE p.status = 'APROVADO'
-      GROUP BY te.id, te.nome
+      GROUP BY te.id_tipo, te.nome
       ORDER BY total_arrecadado DESC
     `, { type: QueryTypes.SELECT });
     res.json(resultado);
@@ -712,17 +712,16 @@ app.get("/consultas/avaliacoes-por-espaco", async (req, res) => {
   try {
     const resultado = await sequelize.query(`
       SELECT
-        e.name                     AS espaco,
-        u.name                     AS proprietario,
-        COUNT(r.id)                AS total_reservas,
-        ROUND(AVG(r.valorTotal), 2) AS media_valor
-      FROM Spaces       e
-      JOIN Users        u ON u.id       = e.userId
-      JOIN Reservations r ON r.spaceId  = e.id
-      WHERE r.status IN ('CONFIRMADA','FINALIZADA')
-      GROUP BY e.id, e.name, u.name
-      HAVING COUNT(r.id) >= 1
-      ORDER BY total_reservas DESC
+        e.nome                        AS espaco,
+        u.nome                        AS proprietario,
+        COUNT(a.id_avaliacao)         AS total_avaliacoes,
+        ROUND(AVG(a.nota), 2)         AS media_nota
+      FROM espaco    e
+      JOIN usuario   u  ON u.id_usuario   = e.id_proprietario
+      JOIN avaliacao a  ON a.id_espaco    = e.id_espaco
+      GROUP BY e.id_espaco, e.nome, u.nome
+      HAVING COUNT(a.id_avaliacao) >= 1
+      ORDER BY media_nota DESC
     `, { type: QueryTypes.SELECT });
     res.json(resultado);
   } catch (error) {
@@ -736,15 +735,15 @@ app.get("/consultas/reservas-por-mes", async (req, res) => {
   try {
     const resultado = await sequelize.query(`
       SELECT
-        DATE_FORMAT(r.startDateTime, '%m/%Y') AS mes_ano,
-        COUNT(r.id)                            AS total_reservas,
-        SUM(r.valorTotal)                      AS valor_movimentado
-      FROM Reservations r
-      JOIN Spaces       e  ON e.id       = r.spaceId
-      JOIN TipoEspacos  te ON te.id      = e.tipoEspacoId
+        DATE_FORMAT(r.data_hora_inicio, '%m/%Y') AS mes_ano,
+        COUNT(r.id_reserva)                       AS total_reservas,
+        SUM(r.valor_total)                        AS valor_movimentado
+      FROM reserva     r
+      JOIN espaco      e  ON e.id_espaco = r.id_espaco
+      JOIN tipo_espaco te ON te.id_tipo  = e.id_tipo
       WHERE r.status IN ('CONFIRMADA','FINALIZADA')
-      GROUP BY DATE_FORMAT(r.startDateTime, '%m/%Y'), YEAR(r.startDateTime), MONTH(r.startDateTime)
-      ORDER BY YEAR(r.startDateTime), MONTH(r.startDateTime)
+      GROUP BY DATE_FORMAT(r.data_hora_inicio, '%m/%Y'), YEAR(r.data_hora_inicio), MONTH(r.data_hora_inicio)
+      ORDER BY YEAR(r.data_hora_inicio), MONTH(r.data_hora_inicio)
     `, { type: QueryTypes.SELECT });
     res.json(resultado);
   } catch (error) {

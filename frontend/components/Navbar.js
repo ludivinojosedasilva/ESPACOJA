@@ -33,24 +33,34 @@ export default function Navbar() {
 
   if (!user) return null;
 
+  const isProprietario = user?.tipoUsuario === "PROPRIETARIO";
+
   return (
     <nav className="bg-gray-900 border-b border-gray-700 px-6 py-3 flex items-center justify-between sticky top-0 z-50">
       <Link href="/dashboard" className="text-white font-bold text-xl">
-        🏢 EspaçoJá
+        🏢 EspacoJa
       </Link>
 
       <div className="flex items-center gap-6 text-sm">
         <Link href="/dashboard" className={isActive("/dashboard")}>
           Dashboard
         </Link>
-        <Link href="/my-reservations" className={isActive("/my-reservations")}>
-          Reservas
-        </Link>
+
+        {isProprietario ? (
+          <Link href="/reservations" className={isActive("/reservations")}>
+            Gerir Reservas
+          </Link>
+        ) : (
+          <Link href="/my-reservations" className={isActive("/my-reservations")}>
+            Minhas Reservas
+          </Link>
+        )}
+
         <Link href="/consultas" className={isActive("/consultas")}>
           Consultas
         </Link>
         <Link href="/ia" className={isActive("/ia")}>
-          🤖 IA
+          IA
         </Link>
         <Link href="/profile" className={isActive("/profile")}>
           Perfil
