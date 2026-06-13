@@ -12,6 +12,7 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [aba, setAba] = useState("todos");
+  const [busca, setBusca] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -71,7 +72,21 @@ export default function Dashboard() {
   }
 
   const isProprietario = user?.tipoUsuario === "PROPRIETARIO";
-  const displaySpaces = aba === "meus" ? spaces : allSpaces;
+  const listaBase = aba === "meus" ? spaces : allSpaces;
+
+  // FILTRO DE BUSCA - filtra por nome, localização, tipo e comodidades
+  const displaySpaces = busca.trim() === ""
+    ? listaBase
+    : listaBase.filter((s) => {
+        const termo = busca.toLowerCase();
+        return (
+          s.name?.toLowerCase().includes(termo) ||
+          s.location?.toLowerCase().includes(termo) ||
+          s.TipoEspaco?.nome?.toLowerCase().includes(termo) ||
+          s.comodidades?.toLowerCase().includes(termo) ||
+          s.description?.toLowerCase().includes(termo)
+        );
+      });
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -79,7 +94,8 @@ export default function Dashboard() {
 
       <div className="max-w-6xl mx-auto px-6 py-10">
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        {/* HEADER */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-800">
               Ola, {user?.name?.split(" ")[0]}!
@@ -94,16 +110,37 @@ export default function Dashboard() {
           {isProprietario && (
             <Link
               href="/spaces/new"
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl transition"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl transition whitespace-nowrap"
             >
               + Cadastrar Espaco
             </Link>
           )}
         </div>
 
-        <div className="flex gap-3 mb-6">
+        {/* BARRA DE PESQUISA */}
+        <div className="relative mb-6">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">🔍</span>
+          <input
+            type="text"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Pesquisar por nome, cidade, tipo... (ex: Quadra, Florianopolis, Salao)"
+            className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-700"
+          />
+          {busca && (
+            <button
+              onClick={() => setBusca("")}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xl"
+            >
+              ×
+            </button>
+          )}
+        </div>
+
+        {/* ABAS */}
+        <div className="flex gap-3 mb-6 flex-wrap">
           <button
-            onClick={() => setAba("todos")}
+            onClick={() => { setAba("todos"); setBusca(""); }}
             className={`px-5 py-2 rounded-full font-medium transition ${
               aba === "todos"
                 ? "bg-blue-600 text-white"
@@ -114,7 +151,7 @@ export default function Dashboard() {
           </button>
           {isProprietario && (
             <button
-              onClick={() => setAba("meus")}
+              onClick={() => { setAba("meus"); setBusca(""); }}
               className={`px-5 py-2 rounded-full font-medium transition ${
                 aba === "meus"
                   ? "bg-blue-600 text-white"
@@ -126,10 +163,32 @@ export default function Dashboard() {
           )}
         </div>
 
+        {/* RESULTADO DA BUSCA */}
+        {busca && (
+          <p className="text-gray-500 text-sm mb-4">
+            {displaySpaces.length === 0
+              ? `Nenhum resultado para "${busca}"`
+              : `${displaySpaces.length} resultado(s) para "${busca}"`}
+          </p>
+        )}
+
+        {/* GRID DE ESPACOS */}
         {displaySpaces.length === 0 ? (
           <div className="bg-white rounded-2xl shadow p-12 text-center text-gray-400">
-            <p className="text-5xl mb-3">🏗</p>
-            <p className="text-lg">Nenhum espaco encontrado.</p>
+            <p className="text-5xl mb-3">{busca ? "🔍" : "🏗"}</p>
+            <p className="text-lg">
+              {busca
+                ? `Nenhum espaco encontrado para "${busca}"`
+                : "Nenhum espaco encontrado."}
+            </p>
+            {busca && (
+              <button
+                onClick={() => setBusca("")}
+                className="mt-4 text-blue-500 hover:underline text-sm"
+              >
+                Limpar pesquisa
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -152,7 +211,7 @@ export default function Dashboard() {
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <h3 className="font-bold text-gray-800 text-lg">{space.name}</h3>
                       {space.TipoEspaco && (
-                        <span className="text-xs bg-blue-100 text-blue-700 font-bold px-2 py-1 rounded-full">
+                        <span className="text-xs bg-blue-100 text-blue-700 font-bold px-2 py-1 rounded-full whitespace-nowrap">
                           {space.TipoEspaco.nome}
                         </span>
                       )}
