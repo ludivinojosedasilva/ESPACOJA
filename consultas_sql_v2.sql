@@ -111,7 +111,9 @@ Resultado esperado (amostra):
 | 07/2026 | 2              | R$   990,00        |
 +---------+----------------+--------------------+
 */
-
+SELECT id_usuario, nome, email, tipo_usuario FROM usuario ORDER BY id_usuario;
+ALTER TABLE espaco ADD COLUMN imagem VARCHAR(255) NULL;
+DESCRIBE espaco;
 -- ============================================================
 -- FIM DAS CONSULTAS v2
 -- ============================================================

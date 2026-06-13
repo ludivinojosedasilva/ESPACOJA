@@ -219,6 +219,17 @@ CREATE TABLE pagamento (
     ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
+ALTER TABLE usuario
+  ADD COLUMN tipo_pessoa ENUM('FISICA','JURIDICA') NULL,
+  ADD COLUMN cpf CHAR(11) NULL,
+  ADD COLUMN cnpj CHAR(14) NULL;
+  
+  -- Verifica o ID do teu utilizador
+SELECT id_usuario, nome, tipo_usuario FROM usuario ORDER BY id_usuario DESC LIMIT 5;
+
+-- Insere na tabela proprietario (usa o id correto)
+INSERT INTO proprietario (id_usuario) VALUES (14);
+
 -- ============================================================
 -- FIM DO SCRIPT DDL v2
 -- ============================================================
