@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Navbar from "../../components/Navbar";
 
 export default function MyReservations() {
@@ -32,21 +33,21 @@ export default function MyReservations() {
 
   function getStatusColor(status) {
     switch (status) {
-      case "CONFIRMADA":  return "bg-green-100 text-green-700 border-green-200";
-      case "PENDENTE":    return "bg-yellow-100 text-yellow-700 border-yellow-200";
-      case "FINALIZADA":  return "bg-blue-100 text-blue-700 border-blue-200";
-      case "CANCELADA":   return "bg-red-100 text-red-700 border-red-200";
-      default:            return "bg-gray-100 text-gray-700";
+      case "CONFIRMADA": return "bg-green-100 text-green-700 border-green-200";
+      case "PENDENTE":   return "bg-yellow-100 text-yellow-700 border-yellow-200";
+      case "FINALIZADA": return "bg-blue-100 text-blue-700 border-blue-200";
+      case "CANCELADA":  return "bg-red-100 text-red-700 border-red-200";
+      default:           return "bg-gray-100 text-gray-700";
     }
   }
 
   function getStatusLabel(status) {
     switch (status) {
-      case "CONFIRMADA":  return "✅ Confirmada";
-      case "PENDENTE":    return "⏳ Pendente";
-      case "FINALIZADA":  return "🏁 Finalizada";
-      case "CANCELADA":   return "❌ Cancelada";
-      default:            return status;
+      case "CONFIRMADA": return "Confirmada";
+      case "PENDENTE":   return "Pendente";
+      case "FINALIZADA": return "Finalizada";
+      case "CANCELADA":  return "Cancelada";
+      default:           return status;
     }
   }
 
@@ -70,11 +71,10 @@ export default function MyReservations() {
 
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">📅 Minhas Reservas</h1>
+            <h1 className="text-3xl font-bold text-gray-800">Minhas Reservas</h1>
             <p className="text-gray-500 mt-1">{reservations.length} reserva(s) encontrada(s)</p>
           </div>
 
-          {/* FILTROS */}
           <div className="flex gap-2 flex-wrap">
             {["TODOS", "CONFIRMADA", "PENDENTE", "FINALIZADA", "CANCELADA"].map((f) => (
               <button
@@ -110,14 +110,14 @@ export default function MyReservations() {
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-800 text-lg">
-                      {r.Space?.name || "Espaço"}
+                      {r.Space?.name || "Espaco"}
                     </h3>
                     <p className="text-gray-500 text-sm">📍 {r.Space?.location}</p>
                     <p className="text-gray-500 text-sm mt-1">
                       🕐 {new Date(r.startDateTime).toLocaleString("pt-BR")}
                     </p>
                     <p className="text-gray-400 text-sm">
-                      até {new Date(r.endDateTime).toLocaleString("pt-BR")}
+                      ate {new Date(r.endDateTime).toLocaleString("pt-BR")}
                     </p>
                   </div>
                 </div>
@@ -138,6 +138,16 @@ export default function MyReservations() {
                     <p className="text-xs text-red-500">
                       Multa: R$ {parseFloat(r.valorMulta).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </p>
+                  )}
+
+                  {/* BOTÃO AVALIAR — aparece apenas em reservas FINALIZADAS */}
+                  {r.status === "FINALIZADA" && (
+                    <Link
+                      href={`/avaliar?spaceId=${r.Space?.id}&spaceName=${encodeURIComponent(r.Space?.name || "")}`}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-bold px-4 py-2 rounded-lg transition"
+                    >
+                      Avaliar
+                    </Link>
                   )}
                 </div>
               </div>

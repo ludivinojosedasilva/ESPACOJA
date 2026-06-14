@@ -1,6 +1,7 @@
 require("dotenv").config();
 const Groq = require("groq-sdk");
 
+
 const express   = require("express");
 const cors      = require("cors");
 const bcrypt    = require("bcryptjs");
@@ -20,6 +21,7 @@ const TipoEspaco     = require("./models/TipoEspaco");
 const FormaPagamento = require("./models/FormaPagamento");
 const Nota           = require("./models/Nota");
 const Pagamento      = require("./models/Pagamento");
+const Avaliacao = require("./models/Avaliacao");
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -44,6 +46,12 @@ Pagamento.belongsTo(Nota,      { foreignKey: "notaId" });
 
 FormaPagamento.hasMany(Pagamento,   { foreignKey: "formaPagamentoId" });
 Pagamento.belongsTo(FormaPagamento, { foreignKey: "formaPagamentoId" });
+
+// Avaliação → Espaço e Usuário
+Space.hasMany(Avaliacao,    { foreignKey: "spaceId" });
+Avaliacao.belongsTo(Space,  { foreignKey: "spaceId" });
+User.hasMany(Avaliacao,     { foreignKey: "userId" });
+Avaliacao.belongsTo(User,   { foreignKey: "userId" });
 
 // ── APP ───────────────────────────────────────────────────────
 const app = express();
@@ -655,6 +663,72 @@ app.delete("/pagamentos/:id", authMiddleware, async (req, res) => {
     res.json({ message: "Pagamento excluído com sucesso" });
   } catch (error) {
     res.status(500).json({ message: "Erro ao excluir pagamento" });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════════════
+// ⭐ AVALIAÇÕES
+// ═══════════════════════════════════════════════════════════════
+
+// CRIAR AVALIAÇÃO
+app.post("/avaliacoes", authMiddleware, async (req, res) => {
+  try {
+    const { spaceId, nota, comentario } = req.body;
+
+    if (!spaceId || !nota) {
+      return res.status(400).json({ message: "Informe o espaco e a nota" });
+    }
+    if (nota < 1 || nota > 5) {
+      return res.status(400).json({ message: "Nota deve ser entre 1 e 5" });
+    }
+
+    // Verifica se já avaliou este espaço
+    const jaAvaliou = await Avaliacao.findOne({
+      where: { spaceId, userId: req.user.id }
+    });
+    if (jaAvaliou) {
+      return res.status(400).json({ message: "Voce ja avaliou este espaco" });
+    }
+
+    const avaliacao = await Avaliacao.create({
+      spaceId,
+      userId: req.user.id,
+      nota,
+      comentario: comentario || ""
+    });
+
+    res.status(201).json(avaliacao);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Erro ao criar avaliacao" });
+  }
+});
+
+// LISTAR AVALIAÇÕES DE UM ESPAÇO
+app.get("/avaliacoes/espaco/:spaceId", async (req, res) => {
+  try {
+    const avaliacoes = await Avaliacao.findAll({
+      where: { spaceId: req.params.spaceId },
+      include: [{ model: User, attributes: ["id", "name"] }],
+      order: [["id", "DESC"]]
+    });
+    res.json(avaliacoes);
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao listar avaliacoes" });
+  }
+});
+
+// EXCLUIR AVALIAÇÃO
+app.delete("/avaliacoes/:id", authMiddleware, async (req, res) => {
+  try {
+    const avaliacao = await Avaliacao.findByPk(req.params.id);
+    if (!avaliacao) return res.status(404).json({ message: "Avaliacao nao encontrada" });
+    if (avaliacao.userId !== req.user.id) return res.status(403).json({ message: "Sem permissao" });
+    await avaliacao.destroy();
+    res.json({ message: "Avaliacao excluida com sucesso" });
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao excluir avaliacao" });
   }
 });
 
