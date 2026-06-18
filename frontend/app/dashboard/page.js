@@ -74,7 +74,6 @@ export default function Dashboard() {
   const isProprietario = user?.tipoUsuario === "PROPRIETARIO";
   const listaBase = aba === "meus" ? spaces : allSpaces;
 
-  // FILTRO DE BUSCA - filtra por nome, localização, tipo e comodidades
   const displaySpaces = busca.trim() === ""
     ? listaBase
     : listaBase.filter((s) => {
@@ -106,7 +105,6 @@ export default function Dashboard() {
                 : "Explore os espacos disponiveis para reservar"}
             </p>
           </div>
-
           {isProprietario && (
             <Link
               href="/spaces/new"
@@ -132,7 +130,7 @@ export default function Dashboard() {
               onClick={() => setBusca("")}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xl"
             >
-              ×
+              x
             </button>
           )}
         </div>
@@ -177,9 +175,7 @@ export default function Dashboard() {
           <div className="bg-white rounded-2xl shadow p-12 text-center text-gray-400">
             <p className="text-5xl mb-3">{busca ? "🔍" : "🏗"}</p>
             <p className="text-lg">
-              {busca
-                ? `Nenhum espaco encontrado para "${busca}"`
-                : "Nenhum espaco encontrado."}
+              {busca ? `Nenhum espaco encontrado para "${busca}"` : "Nenhum espaco encontrado."}
             </p>
             {busca && (
               <button
@@ -237,12 +233,20 @@ export default function Dashboard() {
                           Ver
                         </Link>
                         {aba === "meus" && (
-                          <button
-                            onClick={() => handleDelete(space.id)}
-                            className="bg-red-100 hover:bg-red-200 text-red-600 text-sm px-3 py-2 rounded-lg transition"
-                          >
-                            🗑
-                          </button>
+                          <>
+                            <Link
+                              href={`/spaces/edit/${space.id}`}
+                              className="bg-yellow-500 hover:bg-yellow-600 text-white text-sm px-3 py-2 rounded-lg transition"
+                            >
+                              ✏️
+                            </Link>
+                            <button
+                              onClick={() => handleDelete(space.id)}
+                              className="bg-red-100 hover:bg-red-200 text-red-600 text-sm px-3 py-2 rounded-lg transition"
+                            >
+                              🗑
+                            </button>
+                          </>
                         )}
                       </div>
                     </div>
