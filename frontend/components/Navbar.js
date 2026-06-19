@@ -51,10 +51,16 @@ export default function Navbar() {
             Gerir Reservas
           </Link>
         ) : (
-          <Link href="/my-reservations" className={isActive("/my-reservations")}>
-            Minhas Reservas
-          </Link>
+          <>
+            <Link href="/my-reservations" className={isActive("/my-reservations")}>
+              Minhas Reservas
+            </Link>
+            <Link href="/pagamentos" className={isActive("/pagamentos")}>
+              Pagamentos
+            </Link>
+          </>
         )}
+
 
         <Link href="/consultas" className={isActive("/consultas")}>
           Consultas
