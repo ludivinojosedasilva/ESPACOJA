@@ -393,23 +393,25 @@ app.delete("/spaces/:id", authMiddleware, async (req, res) => {
 // 📅 RESERVAS
 // ═══════════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════════
+// LÓGICA DE DESCONTO E MULTA
+// Substitui a rota POST /reservations existente no server.js
+// ═══════════════════════════════════════════════════════════════
+
 app.post("/reservations", authMiddleware, async (req, res) => {
   try {
-    const { spaceId, dataHoraInicio, dataHoraFim, valorTotal, valorDesconto, valorMulta } = req.body;
+    const { spaceId, dataHoraInicio, dataHoraFim, valorTotal } = req.body;
     if (!spaceId || !dataHoraInicio || !dataHoraFim) {
       return res.status(400).json({ message: "Preencha todos os campos" });
     }
 
     const inicio = new Date(dataHoraInicio);
     const fim    = new Date(dataHoraFim);
+    const agora  = new Date();
 
-    // ✅ VALIDAÇÃO: data não pode ser no passado
-    const agora = new Date();
     if (inicio < agora) {
       return res.status(400).json({ message: "Não é possível reservar datas que já passaram" });
     }
-
-    // ✅ VALIDAÇÃO: fim deve ser depois do início
     if (fim <= inicio) {
       return res.status(400).json({ message: "A data/hora de fim deve ser após o início" });
     }
@@ -422,29 +424,96 @@ app.post("/reservations", authMiddleware, async (req, res) => {
         [Op.or]: [
           { startDateTime: { [Op.between]: [inicio, fim] } },
           { endDateTime:   { [Op.between]: [inicio, fim] } },
-          {
-            startDateTime: { [Op.lte]: inicio },
-            endDateTime:   { [Op.gte]: fim }
-          }
+          { startDateTime: { [Op.lte]: inicio }, endDateTime: { [Op.gte]: fim } }
         ]
       }
     });
     if (conflito) return res.status(400).json({ message: "Horário já reservado para este espaço" });
 
+    // ── CÁLCULO DE DESCONTO POR ANTECEDÊNCIA ──────────────────
+    // Reserva feita com 20 dias ou mais de antecedência: 10% de desconto
+    const diasAntecedencia = Math.floor((inicio - agora) / (1000 * 60 * 60 * 24));
+    let valorDesconto = 0;
+    const valorBase = parseFloat(valorTotal) || 0;
+
+    if (diasAntecedencia >= 20) {
+      valorDesconto = valorBase * 0.10;
+    }
+
+    const valorFinal = valorBase - valorDesconto;
+
     const reservation = await Reservation.create({
       startDateTime: inicio,
       endDateTime:   fim,
-      valorTotal:    valorTotal || 0,
-      valorDesconto: valorDesconto || 0,
-      valorMulta:    valorMulta || 0,
+      valorTotal:    valorFinal,
+      valorDesconto: valorDesconto,
+      valorMulta:    0,
       status:        "PENDENTE",
       spaceId,
       userId:        req.user.id
     });
-    res.status(201).json(reservation);
+
+    res.status(201).json({
+      ...reservation.toJSON(),
+      diasAntecedencia,
+      descontoAplicado: valorDesconto > 0
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Erro ao criar reserva" });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// CANCELAMENTO COM CÁLCULO DE MULTA
+// ═══════════════════════════════════════════════════════════════
+
+app.put("/reservations/:id/cancelar", authMiddleware, async (req, res) => {
+  try {
+    const reservation = await Reservation.findByPk(req.params.id, {
+      include: [{ model: Space, include: [{ model: TipoEspaco }] }]
+    });
+
+    if (!reservation) return res.status(404).json({ message: "Reserva não encontrada" });
+    if (reservation.userId !== req.user.id) {
+      return res.status(403).json({ message: "Sem permissão para cancelar esta reserva" });
+    }
+    if (reservation.status === "CANCELADA") {
+      return res.status(400).json({ message: "Reserva já está cancelada" });
+    }
+    if (reservation.status === "FINALIZADA") {
+      return res.status(400).json({ message: "Não é possível cancelar uma reserva finalizada" });
+    }
+
+    const agora = new Date();
+    const inicio = new Date(reservation.startDateTime);
+    const diasAntecedencia = Math.floor((inicio - agora) / (1000 * 60 * 60 * 24));
+
+    let valorMulta = 0;
+    let percentualAplicado = 0;
+
+    // Cancelamento com 5 dias ou menos de antecedência: aplica multa
+    if (diasAntecedencia <= 5) {
+      percentualAplicado = parseFloat(reservation.Space?.TipoEspaco?.percentualMulta) || 10;
+      const valorBase = parseFloat(reservation.valorTotal) || 0;
+      valorMulta = valorBase * (percentualAplicado / 100);
+    }
+
+    await reservation.update({
+      status: "CANCELADA",
+      valorMulta: valorMulta
+    });
+
+    res.json({
+      message: "Reserva cancelada com sucesso",
+      diasAntecedencia,
+      percentualMultaAplicado: percentualAplicado,
+      valorMulta,
+      reservation
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Erro ao cancelar reserva" });
   }
 });
 

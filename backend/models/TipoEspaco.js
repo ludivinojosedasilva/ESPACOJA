@@ -15,6 +15,12 @@ const TipoEspaco = sequelize.define("TipoEspaco", {
   descricao: {
     type: DataTypes.TEXT,
     allowNull: true
+  },
+  percentualMulta: {
+    type: DataTypes.DECIMAL(5, 2),
+    allowNull: true,
+    defaultValue: 10.00,
+    field: "percentual_multa"
   }
 }, {
   tableName: "tipo_espaco",
