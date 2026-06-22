@@ -10,6 +10,7 @@ export default function MyReservations() {
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState("TODOS");
+  const [cancelando, setCancelando] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -28,6 +29,54 @@ export default function MyReservations() {
       setReservations([]);
     } finally {
       setLoading(false);
+    }
+  }
+
+  function getDiasAntecedencia(startDateTime) {
+    const inicio = new Date(startDateTime);
+    const agora = new Date();
+    return Math.floor((inicio - agora) / (1000 * 60 * 60 * 24));
+  }
+
+  async function handleCancelar(reserva) {
+    const dias = getDiasAntecedencia(reserva.startDateTime);
+    const vaiTerMulta = dias <= 5;
+
+    const confirmMsg = vaiTerMulta
+      ? `Atencao: faltam ${dias} dia(s) para a reserva. Sera cobrada multa por cancelamento. Deseja continuar?`
+      : "Deseja realmente cancelar esta reserva?";
+
+    if (!confirm(confirmMsg)) return;
+
+    setCancelando(reserva.id);
+    const token = localStorage.getItem("token");
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reservations/${reserva.id}/cancelar`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Erro ao cancelar reserva");
+        return;
+      }
+
+      if (data.valorMulta > 0) {
+        alert(`Reserva cancelada. Multa de ${data.percentualMultaAplicado}% aplicada: R$ ${parseFloat(data.valorMulta).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`);
+      } else {
+        alert("Reserva cancelada sem multa.");
+      }
+
+      setReservations(prev => prev.map(r =>
+        r.id === reserva.id ? { ...r, status: "CANCELADA", valorMulta: data.valorMulta } : r
+      ));
+    } catch {
+      alert("Erro ao conectar com servidor");
+    } finally {
+      setCancelando(null);
     }
   }
 
@@ -99,59 +148,79 @@ export default function MyReservations() {
           </div>
         ) : (
           <div className="space-y-4">
-            {filtradas.map((r) => (
-              <div
-                key={r.id}
-                className="bg-white rounded-2xl shadow p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-md transition"
-              >
-                <div className="flex gap-4 items-start">
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">
-                    🏢
+            {filtradas.map((r) => {
+              const dias = getDiasAntecedencia(r.startDateTime);
+              const podeCancelar = r.status === "PENDENTE" || r.status === "CONFIRMADA";
+              const vaiTerMulta = podeCancelar && dias <= 5;
+
+              return (
+                <div
+                  key={r.id}
+                  className="bg-white rounded-2xl shadow p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-md transition"
+                >
+                  <div className="flex gap-4 items-start">
+                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">
+                      🏢
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-800 text-lg">{r.Space?.name || "Espaco"}</h3>
+                      <p className="text-gray-500 text-sm">📍 {r.Space?.location}</p>
+                      <p className="text-gray-500 text-sm mt-1">
+                        🕐 {new Date(r.startDateTime).toLocaleString("pt-BR")}
+                      </p>
+                      <p className="text-gray-400 text-sm">
+                        ate {new Date(r.endDateTime).toLocaleString("pt-BR")}
+                      </p>
+                      {podeCancelar && (
+                        <p className={`text-xs mt-1 ${vaiTerMulta ? "text-red-500 font-bold" : "text-gray-400"}`}>
+                          {vaiTerMulta
+                            ? `⚠️ Cancelamento agora gera multa (${dias} dia(s) restante(s))`
+                            : `Cancelamento gratuito (${dias} dias de antecedencia)`}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-gray-800 text-lg">
-                      {r.Space?.name || "Espaco"}
-                    </h3>
-                    <p className="text-gray-500 text-sm">📍 {r.Space?.location}</p>
-                    <p className="text-gray-500 text-sm mt-1">
-                      🕐 {new Date(r.startDateTime).toLocaleString("pt-BR")}
+
+                  <div className="flex flex-col items-end gap-2">
+                    <span className={`text-xs font-bold px-3 py-1 rounded-full border ${getStatusColor(r.status)}`}>
+                      {getStatusLabel(r.status)}
+                    </span>
+                    <p className="text-green-600 font-bold text-lg">
+                      R$ {parseFloat(r.valorTotal || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </p>
-                    <p className="text-gray-400 text-sm">
-                      ate {new Date(r.endDateTime).toLocaleString("pt-BR")}
-                    </p>
+                    {r.valorDesconto > 0 && (
+                      <p className="text-xs text-green-500">
+                        Desconto aplicado: R$ {parseFloat(r.valorDesconto).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </p>
+                    )}
+                    {r.valorMulta > 0 && (
+                      <p className="text-xs text-red-500">
+                        Multa: R$ {parseFloat(r.valorMulta).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </p>
+                    )}
+
+                    {podeCancelar && (
+                      <button
+                        onClick={() => handleCancelar(r)}
+                        disabled={cancelando === r.id}
+                        className="bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white text-sm font-bold px-4 py-2 rounded-lg transition"
+                      >
+                        {cancelando === r.id ? "Cancelando..." : "Cancelar Reserva"}
+                      </button>
+                    )}
+
+                    {r.status === "FINALIZADA" && (
+                      <Link
+                        href={`/avaliar?spaceId=${r.Space?.id}&spaceName=${encodeURIComponent(r.Space?.name || "")}`}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-bold px-4 py-2 rounded-lg transition"
+                      >
+                        Avaliar
+                      </Link>
+                    )}
                   </div>
                 </div>
-
-                <div className="flex flex-col items-end gap-2">
-                  <span className={`text-xs font-bold px-3 py-1 rounded-full border ${getStatusColor(r.status)}`}>
-                    {getStatusLabel(r.status)}
-                  </span>
-                  <p className="text-green-600 font-bold text-lg">
-                    R$ {parseFloat(r.valorTotal || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                  </p>
-                  {r.valorDesconto > 0 && (
-                    <p className="text-xs text-blue-500">
-                      Desconto: R$ {parseFloat(r.valorDesconto).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                    </p>
-                  )}
-                  {r.valorMulta > 0 && (
-                    <p className="text-xs text-red-500">
-                      Multa: R$ {parseFloat(r.valorMulta).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                    </p>
-                  )}
-
-                  {/* BOTÃO AVALIAR — aparece apenas em reservas FINALIZADAS */}
-                  {r.status === "FINALIZADA" && (
-                    <Link
-                      href={`/avaliar?spaceId=${r.Space?.id}&spaceName=${encodeURIComponent(r.Space?.name || "")}`}
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-bold px-4 py-2 rounded-lg transition"
-                    >
-                      Avaliar
-                    </Link>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import Navbar from "../../../components/Navbar";
 
 export default function SpaceDetails() {
@@ -34,7 +33,6 @@ export default function SpaceDetails() {
         setSpace(null);
       }
 
-      // Carrega avaliações
       const avalRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/avaliacoes/espaco/${id}`);
       if (avalRes.ok) setAvaliacoes(await avalRes.json());
 
@@ -57,19 +55,41 @@ export default function SpaceDetails() {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
+  function formatarDuracao(horas) {
+    const dias = Math.floor(horas / 24);
+    const horasRestantes = Math.round((horas % 24) * 10) / 10;
+
+    if (dias === 0) {
+      return `${horasRestantes} hora(s)`;
+    }
+    if (horasRestantes === 0) {
+      return `${dias} dia(s)`;
+    }
+    return `${dias} dia(s) e ${horasRestantes} hora(s)`;
+  }
+
   async function handleReserve(e) {
     e.preventDefault();
     const start = new Date(form.startDateTime);
     const end = new Date(form.endDateTime);
     if (end <= start) { alert("Data/hora invalida"); return; }
 
+    const diffHoras = (end - start) / 3600000;
+
+    // Confirmação extra para reservas muito longas (provavel engano de seleção de dia)
+    if (diffHoras > 24) {
+      const confirmar = confirm(
+        `Atencao: esta reserva tem duracao de ${formatarDuracao(diffHoras)}.\n\nIsso esta correto? Clique OK para confirmar ou Cancelar para revisar as datas.`
+      );
+      if (!confirmar) return;
+    }
+
     const token = localStorage.getItem("token");
     if (!token) { alert("Faca login para reservar"); router.push("/login"); return; }
 
     setSending(true);
     try {
-      const diffHoras = (end - start) / 3600000;
-      const valorTotal = diffHoras * parseFloat(space.price);
+      const valorBruto = diffHoras * parseFloat(space.price);
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reservations`, {
         method: "POST",
@@ -81,14 +101,19 @@ export default function SpaceDetails() {
           spaceId: space.id,
           dataHoraInicio: form.startDateTime,
           dataHoraFim: form.endDateTime,
-          valorTotal: valorTotal.toFixed(2)
+          valorTotal: valorBruto.toFixed(2)
         })
       });
 
       const data = await res.json();
       if (!res.ok) { alert(data.message || "Erro ao reservar"); return; }
 
-      alert("Reserva criada com sucesso!");
+      if (data.descontoAplicado) {
+        alert("Reserva criada com 10% de desconto por antecedencia!");
+      } else {
+        alert("Reserva criada com sucesso!");
+      }
+
       setForm({ startDateTime: "", endDateTime: "" });
       setShowForm(false);
       loadData();
@@ -111,9 +136,7 @@ export default function SpaceDetails() {
 
   function renderEstrelas(nota) {
     return Array.from({ length: 5 }, (_, i) => (
-      <span key={i} className={i < nota ? "text-yellow-400" : "text-gray-300"}>
-        ⭐
-      </span>
+      <span key={i} className={i < nota ? "text-yellow-400" : "text-gray-300"}>⭐</span>
     ));
   }
 
@@ -133,19 +156,31 @@ export default function SpaceDetails() {
     return (
       <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center gap-4">
         <p className="text-2xl text-gray-500">Espaco nao encontrado</p>
-        <button
-          onClick={() => router.push("/dashboard")}
-          className="bg-blue-500 text-white px-6 py-2 rounded-lg"
-        >
+        <button onClick={() => router.push("/dashboard")} className="bg-blue-500 text-white px-6 py-2 rounded-lg">
           Voltar ao Dashboard
         </button>
       </div>
     );
   }
 
-  const imageUrl = space.image
-    ? `${process.env.NEXT_PUBLIC_API_URL}${space.image}`
-    : null;
+  const imageUrl = space.image ? `${process.env.NEXT_PUBLIC_API_URL}${space.image}` : null;
+
+  // Calculo em tempo real para exibicao no formulario
+  let resumoReserva = null;
+  if (form.startDateTime && form.endDateTime) {
+    const start = new Date(form.startDateTime);
+    const end = new Date(form.endDateTime);
+    if (end > start) {
+      const diffHoras = (end - start) / 3600000;
+      const valorBruto = diffHoras * parseFloat(space.price);
+      const diasAntecedencia = Math.floor((start - new Date()) / (1000 * 60 * 60 * 24));
+      const temDesconto = diasAntecedencia >= 20;
+      const valorComDesconto = temDesconto ? valorBruto * 0.9 : valorBruto;
+      const duracaoLonga = diffHoras > 24;
+
+      resumoReserva = { diffHoras, valorBruto, diasAntecedencia, temDesconto, valorComDesconto, duracaoLonga };
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -153,16 +188,12 @@ export default function SpaceDetails() {
 
       <div className="max-w-5xl mx-auto px-6 py-10">
 
-        <button
-          onClick={() => router.back()}
-          className="text-blue-500 mb-6 hover:underline flex items-center gap-1"
-        >
+        <button onClick={() => router.back()} className="text-blue-500 mb-6 hover:underline">
           Voltar
         </button>
 
         <div className="bg-white rounded-2xl shadow overflow-hidden">
 
-          {/* IMAGEM */}
           {imageUrl ? (
             <img src={imageUrl} alt={space.name} className="w-full h-80 object-cover" />
           ) : (
@@ -173,7 +204,6 @@ export default function SpaceDetails() {
 
           <div className="p-8">
 
-            {/* INFO */}
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">
               <div>
                 <h1 className="text-3xl font-bold text-gray-800">{space.name}</h1>
@@ -183,7 +213,6 @@ export default function SpaceDetails() {
                     {space.TipoEspaco.nome}
                   </span>
                 )}
-                {/* MÉDIA DE AVALIAÇÕES */}
                 {mediaNotas && (
                   <div className="flex items-center gap-2 mt-2">
                     <span className="text-yellow-400 text-lg">⭐</span>
@@ -211,7 +240,6 @@ export default function SpaceDetails() {
               </div>
             )}
 
-            {/* PROPRIETÁRIO */}
             {space.User && (
               <div className="bg-blue-50 rounded-xl p-4 mb-6">
                 <p className="text-sm font-bold text-gray-700 mb-1">Proprietario</p>
@@ -220,33 +248,34 @@ export default function SpaceDetails() {
               </div>
             )}
 
-            {/* AVALIAÇÕES */}
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+              <p className="text-sm font-bold text-amber-800 mb-1">📋 Politica de Reservas</p>
+              <ul className="text-amber-700 text-sm space-y-1">
+                <li>• Reservas feitas com 20 dias ou mais de antecedencia tem 10% de desconto</li>
+                <li>• Cancelamentos com 5 dias ou menos de antecedencia estao sujeitos a multa</li>
+                {space.TipoEspaco?.percentualMulta && (
+                  <li>• Multa para esta categoria ({space.TipoEspaco.nome}): <strong>{parseFloat(space.TipoEspaco.percentualMulta)}%</strong></li>
+                )}
+              </ul>
+            </div>
+
             {avaliacoes.length > 0 && (
               <div className="mb-6">
-                <h2 className="text-lg font-bold mb-3 text-gray-800">
-                  Avaliacoes ({avaliacoes.length})
-                </h2>
+                <h2 className="text-lg font-bold mb-3 text-gray-800">Avaliacoes ({avaliacoes.length})</h2>
                 <div className="space-y-3">
                   {avaliacoes.map((a) => (
                     <div key={a.id} className="bg-gray-50 rounded-xl p-4">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium text-gray-700">
-                          {a.User?.name || "Usuario"}
-                        </span>
-                        <div className="flex">
-                          {renderEstrelas(a.nota)}
-                        </div>
+                        <span className="font-medium text-gray-700">{a.User?.name || "Usuario"}</span>
+                        <div className="flex">{renderEstrelas(a.nota)}</div>
                       </div>
-                      {a.comentario && (
-                        <p className="text-gray-500 text-sm mt-1">{a.comentario}</p>
-                      )}
+                      {a.comentario && <p className="text-gray-500 text-sm mt-1">{a.comentario}</p>}
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* RESERVAS EXISTENTES */}
             {reservations.length > 0 && (
               <div className="mb-6">
                 <h2 className="text-lg font-bold mb-3 text-gray-800">Reservas neste espaco</h2>
@@ -266,7 +295,6 @@ export default function SpaceDetails() {
               </div>
             )}
 
-            {/* FORMULÁRIO DE RESERVA */}
             {!showForm ? (
               <button
                 onClick={() => setShowForm(true)}
@@ -301,15 +329,42 @@ export default function SpaceDetails() {
                     />
                   </div>
 
-                  {form.startDateTime && form.endDateTime && new Date(form.endDateTime) > new Date(form.startDateTime) && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <p className="text-green-700 font-bold">
-                        Valor estimado: R${" "}
-                        {(
-                          ((new Date(form.endDateTime) - new Date(form.startDateTime)) / 3600000) *
-                          parseFloat(space.price)
-                        ).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  {resumoReserva && (
+                    <div className={`border rounded-lg p-3 ${
+                      resumoReserva.duracaoLonga
+                        ? "bg-orange-50 border-orange-300"
+                        : resumoReserva.temDesconto
+                          ? "bg-green-50 border-green-200"
+                          : "bg-blue-50 border-blue-200"
+                    }`}>
+
+                      {/* AVISO DE DURACAO LONGA - evita engano de selecao de dia */}
+                      {resumoReserva.duracaoLonga && (
+                        <p className="text-orange-700 text-sm font-bold mb-2">
+                          ⚠️ Duracao total: {formatarDuracao(resumoReserva.diffHoras)} -- confira se as datas estao corretas
+                        </p>
+                      )}
+
+                      {resumoReserva.temDesconto && (
+                        <>
+                          <p className="text-green-700 text-sm font-bold mb-1">
+                            🎉 Desconto de 10% aplicado! (reserva com {resumoReserva.diasAntecedencia} dias de antecedencia)
+                          </p>
+                          <p className="text-gray-500 text-sm line-through">
+                            R$ {resumoReserva.valorBruto.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          </p>
+                        </>
+                      )}
+
+                      <p className="text-blue-700 font-bold text-lg">
+                        Valor final: R$ {resumoReserva.valorComDesconto.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                       </p>
+
+                      {!resumoReserva.temDesconto && resumoReserva.diasAntecedencia >= 0 && resumoReserva.diasAntecedencia < 20 && (
+                        <p className="text-gray-400 text-xs mt-1">
+                          Reserve com 20 dias ou mais de antecedencia e ganhe 10% de desconto
+                        </p>
+                      )}
                     </div>
                   )}
 
