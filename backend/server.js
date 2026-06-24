@@ -737,34 +737,66 @@ app.delete("/pagamentos/:id", authMiddleware, async (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════════════
-// ⭐ AVALIAÇÕES
+// ⭐ AVALIAÇÕES (BIDIRECIONAL)
+// Substitui o bloco de rotas de avaliação existente no server.js
 // ═══════════════════════════════════════════════════════════════
 
-// CRIAR AVALIAÇÃO
+// CRIAR AVALIAÇÃO (locatário avalia espaço OU proprietário avalia locatário)
 app.post("/avaliacoes", authMiddleware, async (req, res) => {
   try {
-    const { spaceId, nota, comentario } = req.body;
+    const { reservationId, nota, comentario, tipoAvaliacao } = req.body;
 
-    if (!spaceId || !nota) {
-      return res.status(400).json({ message: "Informe o espaco e a nota" });
+    if (!reservationId || !nota || !tipoAvaliacao) {
+      return res.status(400).json({ message: "Informe a reserva, a nota e o tipo de avaliacao" });
     }
     if (nota < 1 || nota > 5) {
       return res.status(400).json({ message: "Nota deve ser entre 1 e 5" });
     }
 
-    // Verifica se já avaliou este espaço
+    // Busca a reserva para validar permissões e status
+    const reservation = await Reservation.findByPk(reservationId, {
+      include: [{ model: Space }]
+    });
+    if (!reservation) return res.status(404).json({ message: "Reserva nao encontrada" });
+    if (reservation.status !== "FINALIZADA") {
+      return res.status(400).json({ message: "Só é possível avaliar reservas finalizadas" });
+    }
+
+    // Verifica se já existe avaliação deste tipo para esta reserva
     const jaAvaliou = await Avaliacao.findOne({
-      where: { spaceId, userId: req.user.id }
+      where: { reservationId, tipoAvaliacao }
     });
     if (jaAvaliou) {
-      return res.status(400).json({ message: "Voce ja avaliou este espaco" });
+      return res.status(400).json({ message: "Esta reserva já foi avaliada" });
+    }
+
+    let spaceId, userId;
+
+    if (tipoAvaliacao === "LOCATARIO_AVALIA_ESPACO") {
+      // Apenas o locatário da reserva pode avaliar o espaço
+      if (reservation.userId !== req.user.id) {
+        return res.status(403).json({ message: "Sem permissão para avaliar esta reserva" });
+      }
+      spaceId = reservation.spaceId;
+      userId = reservation.userId; // locatário que avaliou
+    } else if (tipoAvaliacao === "PROPRIETARIO_AVALIA_LOCATARIO") {
+      // Apenas o proprietário do espaço pode avaliar o locatário
+      if (reservation.Space.userId !== req.user.id) {
+        return res.status(403).json({ message: "Sem permissão para avaliar este locatário" });
+      }
+      spaceId = reservation.spaceId;
+      userId = reservation.userId; // locatário sendo avaliado
+    } else {
+      return res.status(400).json({ message: "Tipo de avaliação inválido" });
     }
 
     const avaliacao = await Avaliacao.create({
+      reservationId,
       spaceId,
-      userId: req.user.id,
+      userId,
       nota,
-      comentario: comentario || ""
+      comentario: comentario || "",
+      tipoAvaliacao
     });
 
     res.status(201).json(avaliacao);
@@ -774,17 +806,47 @@ app.post("/avaliacoes", authMiddleware, async (req, res) => {
   }
 });
 
-// LISTAR AVALIAÇÕES DE UM ESPAÇO
+// LISTAR AVALIAÇÕES DE UM ESPAÇO (locatário avalia espaço)
 app.get("/avaliacoes/espaco/:spaceId", async (req, res) => {
   try {
     const avaliacoes = await Avaliacao.findAll({
-      where: { spaceId: req.params.spaceId },
+      where: { spaceId: req.params.spaceId, tipoAvaliacao: "LOCATARIO_AVALIA_ESPACO" },
       include: [{ model: User, attributes: ["id", "name"] }],
       order: [["id", "DESC"]]
     });
     res.json(avaliacoes);
   } catch (error) {
     res.status(500).json({ message: "Erro ao listar avaliacoes" });
+  }
+});
+
+// LISTAR AVALIAÇÕES DE UM LOCATÁRIO (proprietário avalia locatário)
+app.get("/avaliacoes/locatario/:userId", authMiddleware, async (req, res) => {
+  try {
+    const avaliacoes = await Avaliacao.findAll({
+      where: { userId: req.params.userId, tipoAvaliacao: "PROPRIETARIO_AVALIA_LOCATARIO" },
+      include: [{ model: Space, attributes: ["id", "name"] }],
+      order: [["id", "DESC"]]
+    });
+    res.json(avaliacoes);
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao listar avaliacoes" });
+  }
+});
+
+// VERIFICAR SE UMA RESERVA JÁ FOI AVALIADA (ambos os tipos)
+app.get("/avaliacoes/reserva/:reservationId", authMiddleware, async (req, res) => {
+  try {
+    const avaliacoes = await Avaliacao.findAll({
+      where: { reservationId: req.params.reservationId }
+    });
+
+    const jaAvaliouEspaco = avaliacoes.some(a => a.tipoAvaliacao === "LOCATARIO_AVALIA_ESPACO");
+    const jaAvaliouLocatario = avaliacoes.some(a => a.tipoAvaliacao === "PROPRIETARIO_AVALIA_LOCATARIO");
+
+    res.json({ jaAvaliouEspaco, jaAvaliouLocatario });
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao verificar avaliacoes" });
   }
 });
 

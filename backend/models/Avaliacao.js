@@ -17,6 +17,12 @@ const Avaliacao = sequelize.define("Avaliacao", {
     allowNull: false,
     validate: { min: 1, max: 5 }
   },
+  tipoAvaliacao: {
+    type: DataTypes.ENUM("LOCATARIO_AVALIA_ESPACO", "PROPRIETARIO_AVALIA_LOCATARIO"),
+    allowNull: false,
+    defaultValue: "LOCATARIO_AVALIA_ESPACO",
+    field: "tipo_avaliacao"
+  },
   spaceId: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -26,6 +32,11 @@ const Avaliacao = sequelize.define("Avaliacao", {
     type: DataTypes.INTEGER,
     allowNull: false,
     field: "id_locatario"
+  },
+  reservationId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    field: "id_reserva"
   }
 }, {
   tableName: "avaliacao",

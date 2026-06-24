@@ -15,6 +15,31 @@ CREATE DATABASE IF NOT EXISTS espacoja
 
 USE espacoja;
 
+ALTER TABLE tipo_espaco ADD COLUMN percentual_multa DECIMAL(5,2) DEFAULT 10.00;
+
+UPDATE tipo_espaco SET percentual_multa = 15.00 WHERE nome = 'Salão de Festas';
+UPDATE tipo_espaco SET percentual_multa = 15.00 WHERE nome = 'Auditório';
+UPDATE tipo_espaco SET percentual_multa = 15.00 WHERE nome = 'Apartamento';
+UPDATE tipo_espaco SET percentual_multa = 5.00  WHERE nome = 'Quadra Esportiva';
+UPDATE tipo_espaco SET percentual_multa = 5.00  WHERE nome = 'Espaço Coworking';
+UPDATE tipo_espaco SET percentual_multa = 10.00 WHERE nome = 'Casa';
+
+SELECT * FROM tipo_espaco;
+
+SET SQL_SAFE_UPDATES = 0;
+
+UPDATE tipo_espaco SET percentual_multa = 15.00 WHERE nome = 'Salão de Festas';
+UPDATE tipo_espaco SET percentual_multa = 15.00 WHERE nome = 'Auditório';
+UPDATE tipo_espaco SET percentual_multa = 15.00 WHERE nome = 'Apartamento';
+UPDATE tipo_espaco SET percentual_multa = 5.00  WHERE nome = 'Quadra Esportiva';
+UPDATE tipo_espaco SET percentual_multa = 5.00  WHERE nome = 'Espaço Coworking';
+UPDATE tipo_espaco SET percentual_multa = 10.00 WHERE nome = 'Casa';
+
+SET SQL_SAFE_UPDATES = 1;
+
+SELECT * FROM tipo_espaco;
+
+
 -- ============================================================
 -- PASSO 2: CRIAR AS TABELAS (DDL)
 -- ============================================================
@@ -446,6 +471,18 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- Confirma que está vazio
 SELECT COUNT(*) AS total FROM usuario;
 
+
 -- ============================================================
 -- FIM DO GUIA
 -- ============================================================
+
+ALTER TABLE avaliacao 
+  ADD COLUMN id_reserva INT NULL AFTER id_avaliacao,
+  ADD COLUMN tipo_avaliacao ENUM('LOCATARIO_AVALIA_ESPACO', 'PROPRIETARIO_AVALIA_LOCATARIO') NOT NULL DEFAULT 'LOCATARIO_AVALIA_ESPACO';
+
+ALTER TABLE avaliacao
+  ADD CONSTRAINT fk_aval_reserva
+  FOREIGN KEY (id_reserva) REFERENCES reserva(id_reserva)
+  ON DELETE CASCADE ON UPDATE CASCADE;
+  
+  
