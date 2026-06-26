@@ -8,6 +8,7 @@ import Navbar from "../../components/Navbar";
 export default function MyReservations() {
   const router = useRouter();
   const [reservations, setReservations] = useState([]);
+  const [avaliacaoStatus, setAvaliacaoStatus] = useState({});
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState("TODOS");
   const [cancelando, setCancelando] = useState(null);
@@ -25,6 +26,19 @@ export default function MyReservations() {
       });
       const data = res.ok ? await res.json() : [];
       setReservations(data);
+
+      // Verifica status de avaliação para reservas finalizadas
+      const finalizadas = data.filter(r => r.status === "FINALIZADA");
+      const statusMap = {};
+      await Promise.all(finalizadas.map(async (r) => {
+        const avalRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/avaliacoes/reserva/${r.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (avalRes.ok) {
+          statusMap[r.id] = await avalRes.json();
+        }
+      }));
+      setAvaliacaoStatus(statusMap);
     } catch {
       setReservations([]);
     } finally {
@@ -152,6 +166,7 @@ export default function MyReservations() {
               const dias = getDiasAntecedencia(r.startDateTime);
               const podeCancelar = r.status === "PENDENTE" || r.status === "CONFIRMADA";
               const vaiTerMulta = podeCancelar && dias <= 5;
+              const jaAvaliou = avaliacaoStatus[r.id]?.jaAvaliouEspaco;
 
               return (
                 <div
@@ -190,7 +205,7 @@ export default function MyReservations() {
                     </p>
                     {r.valorDesconto > 0 && (
                       <p className="text-xs text-green-500">
-                        Desconto aplicado: R$ {parseFloat(r.valorDesconto).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        Desconto: R$ {parseFloat(r.valorDesconto).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                       </p>
                     )}
                     {r.valorMulta > 0 && (
@@ -210,12 +225,16 @@ export default function MyReservations() {
                     )}
 
                     {r.status === "FINALIZADA" && (
-                      <Link
-                        href={`/avaliar?spaceId=${r.Space?.id}&spaceName=${encodeURIComponent(r.Space?.name || "")}`}
-                        className="bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-bold px-4 py-2 rounded-lg transition"
-                      >
-                        Avaliar
-                      </Link>
+                      jaAvaliou ? (
+                        <span className="text-green-600 text-sm font-medium">✓ Avaliado</span>
+                      ) : (
+                        <Link
+                          href={`/avaliar?reservationId=${r.id}&nome=${encodeURIComponent(r.Space?.name || "")}&tipo=LOCATARIO_AVALIA_ESPACO`}
+                          className="bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-bold px-4 py-2 rounded-lg transition"
+                        >
+                          Avaliar
+                        </Link>
+                      )
                     )}
                   </div>
                 </div>

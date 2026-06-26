@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Navbar from "../../components/Navbar";
 
 export default function ReservationsPage() {
@@ -9,6 +10,7 @@ export default function ReservationsPage() {
   const [reservations, setReservations] = useState([]);
   const [notas, setNotas] = useState([]);
   const [pagamentos, setPagamentos] = useState([]);
+  const [avaliacaoStatus, setAvaliacaoStatus] = useState({});
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState("TODOS");
   const [updating, setUpdating] = useState(null);
@@ -54,6 +56,19 @@ export default function ReservationsPage() {
       setReservations(allReservations);
       setNotas(notasData);
       setPagamentos(pagData);
+
+      // Verifica status de avaliação para reservas finalizadas
+      const finalizadas = allReservations.filter(r => r.status === "FINALIZADA");
+      const statusMap = {};
+      await Promise.all(finalizadas.map(async (r) => {
+        const avalRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/avaliacoes/reserva/${r.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (avalRes.ok) {
+          statusMap[r.id] = await avalRes.json();
+        }
+      }));
+      setAvaliacaoStatus(statusMap);
     } catch {
       setReservations([]);
     } finally {
@@ -197,6 +212,7 @@ export default function ReservationsPage() {
                 ? getNotaEPagamento(r.id)
                 : { nota: null, pagamento: null };
               const statusPag = r.status === "FINALIZADA" ? getStatusPagamentoLabel(pagamento) : null;
+              const jaAvaliouLocatario = avaliacaoStatus[r.id]?.jaAvaliouLocatario;
 
               return (
                 <div key={r.id} className="bg-white rounded-2xl shadow p-6">
@@ -273,7 +289,6 @@ export default function ReservationsPage() {
                         </>
                       )}
 
-                      {/* BOTÃO CONFIRMAR RECEBIMENTO - aparece quando há pagamento PENDENTE */}
                       {pagamento && pagamento.status === "PENDENTE" && (
                         <button
                           onClick={() => confirmarRecebimento(pagamento.id)}
@@ -282,6 +297,20 @@ export default function ReservationsPage() {
                         >
                           {updating === `pag-${pagamento.id}` ? "..." : "Confirmar Recebimento"}
                         </button>
+                      )}
+
+                      {/* BOTÃO AVALIAR LOCATÁRIO - aparece em reservas finalizadas */}
+                      {r.status === "FINALIZADA" && (
+                        jaAvaliouLocatario ? (
+                          <span className="text-green-600 text-sm font-medium text-center">✓ Locatario Avaliado</span>
+                        ) : (
+                          <Link
+                            href={`/avaliar?reservationId=${r.id}&nome=${encodeURIComponent(r.User?.name || "")}&tipo=PROPRIETARIO_AVALIA_LOCATARIO`}
+                            className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold px-5 py-2 rounded-lg transition text-center"
+                          >
+                            Avaliar Locatario
+                          </Link>
+                        )
                       )}
                     </div>
 

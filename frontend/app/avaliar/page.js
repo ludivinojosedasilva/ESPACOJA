@@ -7,8 +7,9 @@ import Navbar from "../../components/Navbar";
 export default function AvaliarPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const spaceId = searchParams.get("spaceId");
-  const spaceName = searchParams.get("spaceName");
+  const reservationId = searchParams.get("reservationId");
+  const nomeReferencia = searchParams.get("nome");
+  const tipoAvaliacao = searchParams.get("tipo") || "LOCATARIO_AVALIA_ESPACO";
 
   const [nota, setNota] = useState(5);
   const [comentario, setComentario] = useState("");
@@ -17,7 +18,7 @@ export default function AvaliarPage() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) { router.push("/login"); return; }
-    if (!spaceId) { router.push("/my-reservations"); return; }
+    if (!reservationId) { router.push("/dashboard"); return; }
   }, []);
 
   async function handleSubmit(e) {
@@ -32,12 +33,17 @@ export default function AvaliarPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ spaceId: parseInt(spaceId), nota, comentario })
+        body: JSON.stringify({
+          reservationId: parseInt(reservationId),
+          nota,
+          comentario,
+          tipoAvaliacao
+        })
       });
 
       if (res.ok) {
         alert("Avaliacao enviada com sucesso!");
-        router.push("/my-reservations");
+        router.back();
       } else {
         const data = await res.json();
         alert(data.message || "Erro ao enviar avaliacao");
@@ -49,30 +55,28 @@ export default function AvaliarPage() {
     }
   }
 
+  const isAvaliandoLocatario = tipoAvaliacao === "PROPRIETARIO_AVALIA_LOCATARIO";
+
   return (
     <div className="min-h-screen bg-gray-100">
       <Navbar />
 
       <div className="max-w-2xl mx-auto px-6 py-10">
 
-        <button
-          onClick={() => router.back()}
-          className="text-blue-500 mb-6 hover:underline flex items-center gap-1"
-        >
+        <button onClick={() => router.back()} className="text-blue-500 mb-6 hover:underline">
           Voltar
         </button>
 
         <div className="bg-white rounded-2xl shadow p-8">
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Avaliar Espaco</h1>
-          <p className="text-gray-500 mb-6">{spaceName}</p>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">
+            {isAvaliandoLocatario ? "Avaliar Locatario" : "Avaliar Espaco"}
+          </h1>
+          <p className="text-gray-500 mb-6">{nomeReferencia}</p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
 
-            {/* ESTRELAS */}
             <div>
-              <label className="text-sm text-gray-600 font-medium block mb-3">
-                Sua nota
-              </label>
+              <label className="text-sm text-gray-600 font-medium block mb-3">Sua nota</label>
               <div className="flex gap-2">
                 {[1, 2, 3, 4, 5].map((n) => (
                   <button
@@ -96,7 +100,6 @@ export default function AvaliarPage() {
               </p>
             </div>
 
-            {/* COMENTÁRIO */}
             <div>
               <label className="text-sm text-gray-600 font-medium block mb-1">
                 Comentario (opcional)
@@ -104,7 +107,9 @@ export default function AvaliarPage() {
               <textarea
                 value={comentario}
                 onChange={(e) => setComentario(e.target.value)}
-                placeholder="Conte como foi sua experiencia..."
+                placeholder={isAvaliandoLocatario
+                  ? "Como foi a experiencia com este locatario?"
+                  : "Conte como foi sua experiencia..."}
                 rows={4}
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
               />

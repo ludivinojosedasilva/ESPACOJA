@@ -738,7 +738,6 @@ app.delete("/pagamentos/:id", authMiddleware, async (req, res) => {
 
 // ═══════════════════════════════════════════════════════════════
 // ⭐ AVALIAÇÕES (BIDIRECIONAL)
-// Substitui o bloco de rotas de avaliação existente no server.js
 // ═══════════════════════════════════════════════════════════════
 
 // CRIAR AVALIAÇÃO (locatário avalia espaço OU proprietário avalia locatário)
@@ -757,7 +756,7 @@ app.post("/avaliacoes", authMiddleware, async (req, res) => {
     const reservation = await Reservation.findByPk(reservationId, {
       include: [{ model: Space }]
     });
-    if (!reservation) return res.status(404).json({ message: "Reserva nao encontrada" });
+    if (!reservation) return res.status(404).json({ message: "Reserva não encontrada" });
     if (reservation.status !== "FINALIZADA") {
       return res.status(400).json({ message: "Só é possível avaliar reservas finalizadas" });
     }
