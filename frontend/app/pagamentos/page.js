@@ -6,7 +6,7 @@ import Navbar from "../../components/Navbar";
 
 export default function PagamentosPage() {
   const router = useRouter();
-  const [reservasFinalizadas, setReservasFinalizadas] = useState([]);
+  const [reservasComPendencia, setReservasComPendencia] = useState([]);
   const [notas, setNotas] = useState([]);
   const [pagamentos, setPagamentos] = useState([]);
   const [formasPagamento, setFormasPagamento] = useState([]);
@@ -41,7 +41,12 @@ export default function PagamentosPage() {
       const pagData = pagRes.ok ? await pagRes.json() : [];
       const formasData = formasRes.ok ? await formasRes.json() : [];
 
-      setReservasFinalizadas(reservas.filter(r => r.status === "FINALIZADA"));
+      // Mostra reservas FINALIZADAS (pagamento do servico) e CANCELADAS com multa (pagamento da multa)
+      const comPendencia = reservas.filter(r =>
+        r.status === "FINALIZADA" || (r.status === "CANCELADA" && parseFloat(r.valorMulta) > 0)
+      );
+
+      setReservasComPendencia(comPendencia);
       setNotas(notasData);
       setPagamentos(pagData);
       setFormasPagamento(formasData);
@@ -112,7 +117,7 @@ export default function PagamentosPage() {
         setPagamentos(prev => [...prev, novoPagamento]);
         setModalAberto(null);
         setFormaSelecionada("");
-        alert("Pagamento registado com sucesso!");
+        alert("Pagamento registado! Aguardando confirmacao do proprietario.");
       } else {
         const data = await res.json();
         alert(data.message || "Erro ao registar pagamento");
@@ -124,10 +129,10 @@ export default function PagamentosPage() {
     }
   }
 
-  async function handleGerarNotaEAbrirPagamento(reserva) {
+  async function handleGerarNotaEAbrirPagamento(reserva, valor) {
     let nota = getNotaDaReserva(reserva.id);
     if (!nota) {
-      nota = await criarNota(reserva.id, reserva.valorTotal);
+      nota = await criarNota(reserva.id, valor);
       if (!nota) { alert("Erro ao gerar nota fiscal"); return; }
     }
     setModalAberto(nota.id);
@@ -149,17 +154,19 @@ export default function PagamentosPage() {
 
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Pagamentos</h1>
         <p className="text-gray-500 mb-8">
-          Gerencie o pagamento das suas reservas finalizadas
+          Gerencie pagamentos de reservas finalizadas e multas de cancelamento
         </p>
 
-        {reservasFinalizadas.length === 0 ? (
+        {reservasComPendencia.length === 0 ? (
           <div className="bg-white rounded-2xl shadow p-12 text-center text-gray-400">
             <p className="text-5xl mb-3">💳</p>
-            <p>Nenhuma reserva finalizada para pagamento.</p>
+            <p>Nenhuma pendencia de pagamento.</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {reservasFinalizadas.map((r) => {
+            {reservasComPendencia.map((r) => {
+              const isMulta = r.status === "CANCELADA";
+              const valorCobranca = isMulta ? parseFloat(r.valorMulta) : parseFloat(r.valorTotal || 0);
               const nota = getNotaDaReserva(r.id);
               const pagamento = nota ? getPagamentoDaNota(nota.id) : null;
               const pago = pagamento && pagamento.status === "APROVADO";
@@ -168,12 +175,20 @@ export default function PagamentosPage() {
                 <div key={r.id} className="bg-white rounded-2xl shadow p-6">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex-1">
-                      <h3 className="font-bold text-gray-800 text-lg">{r.Space?.name}</h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-bold text-gray-800 text-lg">{r.Space?.name}</h3>
+                        {isMulta && (
+                          <span className="bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded-full">
+                            Multa de Cancelamento
+                          </span>
+                        )}
+                      </div>
                       <p className="text-gray-500 text-sm">
-                        {new Date(r.startDateTime).toLocaleDateString("pt-BR")} - Reserva Finalizada
+                        {new Date(r.startDateTime).toLocaleDateString("pt-BR")} -{" "}
+                        {isMulta ? "Reserva Cancelada" : "Reserva Finalizada"}
                       </p>
-                      <p className="text-green-600 font-bold text-lg mt-1">
-                        R$ {parseFloat(r.valorTotal || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      <p className={`font-bold text-lg mt-1 ${isMulta ? "text-red-600" : "text-green-600"}`}>
+                        R$ {valorCobranca.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                       </p>
                     </div>
 
@@ -182,10 +197,16 @@ export default function PagamentosPage() {
                         <span className="bg-green-100 text-green-700 font-bold px-4 py-2 rounded-lg text-sm">
                           ✅ Pago via {formasPagamento.find(f => f.id === pagamento.formaPagamentoId)?.nome}
                         </span>
+                      ) : pagamento && pagamento.status === "PENDENTE" ? (
+                        <span className="bg-yellow-100 text-yellow-700 font-bold px-4 py-2 rounded-lg text-sm">
+                          Aguardando confirmacao
+                        </span>
                       ) : (
                         <button
-                          onClick={() => handleGerarNotaEAbrirPagamento(r)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl transition"
+                          onClick={() => handleGerarNotaEAbrirPagamento(r, valorCobranca)}
+                          className={`font-bold px-6 py-3 rounded-xl transition text-white ${
+                            isMulta ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"
+                          }`}
                         >
                           Pagar Agora
                         </button>
@@ -193,8 +214,7 @@ export default function PagamentosPage() {
                     </div>
                   </div>
 
-                  {/* MODAL DE PAGAMENTO INLINE */}
-                  {modalAberto === nota?.id && !pago && (
+                  {modalAberto === nota?.id && !pago && (!pagamento || pagamento.status !== "PENDENTE") && (
                     <div className="mt-4 border-t pt-4">
                       <label className="text-sm text-gray-600 font-medium block mb-2">
                         Escolha a forma de pagamento

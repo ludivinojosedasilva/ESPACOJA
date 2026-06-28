@@ -464,8 +464,9 @@ app.post("/reservations", authMiddleware, async (req, res) => {
   }
 });
 
+
 // ═══════════════════════════════════════════════════════════════
-// CANCELAMENTO COM CÁLCULO DE MULTA
+// CANCELAMENTO COM MULTA -> GERA NOTA E PAGAMENTO AUTOMATICAMENTE
 // ═══════════════════════════════════════════════════════════════
 
 app.put("/reservations/:id/cancelar", authMiddleware, async (req, res) => {
@@ -491,8 +492,8 @@ app.put("/reservations/:id/cancelar", authMiddleware, async (req, res) => {
 
     let valorMulta = 0;
     let percentualAplicado = 0;
+    let notaGerada = null;
 
-    // Cancelamento com 5 dias ou menos de antecedência: aplica multa
     if (diasAntecedencia <= 5) {
       percentualAplicado = parseFloat(reservation.Space?.TipoEspaco?.percentualMulta) || 10;
       const valorBase = parseFloat(reservation.valorTotal) || 0;
@@ -504,11 +505,21 @@ app.put("/reservations/:id/cancelar", authMiddleware, async (req, res) => {
       valorMulta: valorMulta
     });
 
+    // Se houve multa, gera automaticamente a nota fiscal correspondente
+    if (valorMulta > 0) {
+      notaGerada = await Nota.create({
+        reservationId: reservation.id,
+        dataNota: new Date().toISOString().split("T")[0],
+        valorNota: valorMulta
+      });
+    }
+
     res.json({
       message: "Reserva cancelada com sucesso",
       diasAntecedencia,
       percentualMultaAplicado: percentualAplicado,
       valorMulta,
+      notaGerada,
       reservation
     });
   } catch (error) {

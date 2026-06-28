@@ -97,7 +97,7 @@ export default function Dashboard() {
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-800">
-              Ola, {user?.name?.split(" ")[0]}!
+              Olá, {user?.name?.split(" ")[0]}!
             </h1>
             <p className="text-gray-500 mt-1">
               {isProprietario
