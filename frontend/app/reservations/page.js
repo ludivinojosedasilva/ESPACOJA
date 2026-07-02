@@ -57,7 +57,6 @@ export default function ReservationsPage() {
       setNotas(notasData);
       setPagamentos(pagData);
 
-      // Verifica status de avaliação para reservas finalizadas
       const finalizadas = allReservations.filter(r => r.status === "FINALIZADA");
       const statusMap = {};
       await Promise.all(finalizadas.map(async (r) => {
@@ -83,10 +82,11 @@ export default function ReservationsPage() {
     return { nota, pagamento };
   }
 
-  function getStatusPagamentoLabel(pagamento) {
-    if (!pagamento) return { texto: "Aguardando pagamento", cor: "bg-gray-100 text-gray-500" };
-    if (pagamento.status === "PENDENTE") return { texto: "Pagamento a confirmar", cor: "bg-yellow-100 text-yellow-700" };
-    if (pagamento.status === "APROVADO") return { texto: "Pagamento confirmado", cor: "bg-green-100 text-green-700" };
+  function getStatusPagamentoLabel(pagamento, isMulta) {
+    const rotulo = isMulta ? "multa" : "pagamento";
+    if (!pagamento) return { texto: `Aguardando ${rotulo}`, cor: "bg-gray-100 text-gray-500" };
+    if (pagamento.status === "PENDENTE") return { texto: `${isMulta ? "Multa" : "Pagamento"} a confirmar`, cor: "bg-yellow-100 text-yellow-700" };
+    if (pagamento.status === "APROVADO") return { texto: `${isMulta ? "Multa" : "Pagamento"} confirmado`, cor: "bg-green-100 text-green-700" };
     return { texto: pagamento.status, cor: "bg-gray-100 text-gray-600" };
   }
 
@@ -208,11 +208,17 @@ export default function ReservationsPage() {
         ) : (
           <div className="space-y-4">
             {filtradas.map(r => {
-              const { nota, pagamento } = r.status === "FINALIZADA"
+              const isMulta = r.status === "CANCELADA" && parseFloat(r.valorMulta) > 0;
+              const temPendenciaFinanceira = r.status === "FINALIZADA" || isMulta;
+
+              const { pagamento } = temPendenciaFinanceira
                 ? getNotaEPagamento(r.id)
-                : { nota: null, pagamento: null };
-              const statusPag = r.status === "FINALIZADA" ? getStatusPagamentoLabel(pagamento) : null;
+                : { pagamento: null };
+              const statusPag = temPendenciaFinanceira ? getStatusPagamentoLabel(pagamento, isMulta) : null;
               const jaAvaliouLocatario = avaliacaoStatus[r.id]?.jaAvaliouLocatario;
+
+              // Valor a exibir: se for multa, mostra o valor da multa; senão o valor total normal
+              const valorExibido = isMulta ? parseFloat(r.valorMulta) : parseFloat(r.valorTotal || 0);
 
               return (
                 <div key={r.id} className="bg-white rounded-2xl shadow p-6">
@@ -224,6 +230,11 @@ export default function ReservationsPage() {
                         <span className={`text-xs font-bold px-3 py-1 rounded-full border ${getStatusColor(r.status)}`}>
                           {getStatusLabel(r.status)}
                         </span>
+                        {isMulta && (
+                          <span className="text-xs font-bold px-3 py-1 rounded-full bg-red-100 text-red-600">
+                            Multa de Cancelamento
+                          </span>
+                        )}
                         {statusPag && (
                           <span className={`text-xs font-bold px-3 py-1 rounded-full ${statusPag.cor}`}>
                             💳 {statusPag.texto}
@@ -245,9 +256,20 @@ export default function ReservationsPage() {
                         </p>
                       </div>
 
-                      <p className="text-green-600 font-bold text-lg mt-2">
-                        R$ {parseFloat(r.valorTotal || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                      </p>
+                      {isMulta ? (
+                        <div className="mt-2">
+                          <p className="text-gray-400 text-xs line-through">
+                            Valor original: R$ {parseFloat(r.valorTotal || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          </p>
+                          <p className="text-red-600 font-bold text-lg">
+                            Multa: R$ {valorExibido.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-green-600 font-bold text-lg mt-2">
+                          R$ {valorExibido.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </p>
+                      )}
                     </div>
 
                     <div className="flex flex-col gap-2 min-w-fit">
@@ -295,11 +317,12 @@ export default function ReservationsPage() {
                           disabled={updating === `pag-${pagamento.id}`}
                           className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white font-bold px-5 py-2 rounded-lg transition"
                         >
-                          {updating === `pag-${pagamento.id}` ? "..." : "Confirmar Recebimento"}
+                          {updating === `pag-${pagamento.id}`
+                            ? "..."
+                            : isMulta ? "Confirmar Multa Paga" : "Confirmar Recebimento"}
                         </button>
                       )}
 
-                      {/* BOTÃO AVALIAR LOCATÁRIO - aparece em reservas finalizadas */}
                       {r.status === "FINALIZADA" && (
                         jaAvaliouLocatario ? (
                           <span className="text-green-600 text-sm font-medium text-center">✓ Locatario Avaliado</span>

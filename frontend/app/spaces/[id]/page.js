@@ -276,11 +276,12 @@ export default function SpaceDetails() {
               </div>
             )}
 
-            {reservations.length > 0 && (
+            {reservations.filter(r => new Date(r.endDateTime) >= new Date()).length > 0 && (
               <div className="mb-6">
                 <h2 className="text-lg font-bold mb-3 text-gray-800">Reservas neste espaco</h2>
+
                 <div className="space-y-2">
-                  {reservations.map((r) => (
+                  {reservations.filter(r => new Date(r.endDateTime) >= new Date()).map((r) => (
                     <div key={r.id} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
                       <p className="text-sm text-gray-600">
                         {new Date(r.startDateTime).toLocaleString("pt-BR")} →{" "}
