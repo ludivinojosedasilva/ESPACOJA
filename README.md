@@ -195,7 +195,7 @@ cd ESPACOJA
 ### 2. Configurar o banco de dados
 Abra o MySQL Workbench e execute em ordem:
 ```
-1. database_ddl_final.sql   → cria o banco e as 13 tabelas
+1. guia_completo_sql_v2.sql   → cria o banco e as 13 tabelas
 2. seed_data_v3.sql         → insere dados de exemplo
 ```
 
