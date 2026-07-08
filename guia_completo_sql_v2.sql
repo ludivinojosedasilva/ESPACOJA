@@ -1,8 +1,13 @@
 -- ============================================================
 -- SISTEMA: EspaçoJá Real
--- GUIA COMPLETO DE COMANDOS SQL - v2 (Atualizado)
+-- GUIA COMPLETO DE COMANDOS SQL - v3 (Corrigido)
 -- Professor: Alexandre Leopoldo Gonçalves
 -- Disciplina: Banco de Dados I - DEC7129 - 2026.1
+--
+-- Alterações desta versão em relação à v2:
+--   - tipo_espaco.nome e forma_pagamento.nome agora são UNIQUE
+--     (evita duplicação ao clicar em "Inicializar" mais de uma vez)
+--   - Seção de Admin simplificada para o estado final em uso
 -- ============================================================
 
 -- ============================================================
@@ -21,7 +26,7 @@ USE espacoja;
 
 CREATE TABLE tipo_espaco (
   id_tipo          INT           NOT NULL AUTO_INCREMENT,
-  nome             VARCHAR(100)  NOT NULL,
+  nome             VARCHAR(100)  NOT NULL UNIQUE,
   descricao        TEXT,
   percentual_multa DECIMAL(5,2)  DEFAULT 10.00,
   PRIMARY KEY (id_tipo)
@@ -33,7 +38,7 @@ CREATE TABLE usuario (
   email        VARCHAR(150) NOT NULL UNIQUE,
   senha        VARCHAR(255) NOT NULL,
   telefone     VARCHAR(20),
-  tipo_usuario ENUM('PROPRIETARIO','LOCATARIO') NOT NULL,
+  tipo_usuario ENUM('PROPRIETARIO','LOCATARIO','ADMIN') NOT NULL,
   tipo_pessoa  ENUM('FISICA','JURIDICA'),
   cpf          VARCHAR(14),
   cnpj         VARCHAR(18),
@@ -76,7 +81,7 @@ CREATE TABLE pessoa_juridica (
 
 CREATE TABLE forma_pagamento (
   id_forma INT          NOT NULL AUTO_INCREMENT,
-  nome     VARCHAR(100) NOT NULL,
+  nome     VARCHAR(100) NOT NULL UNIQUE,
   PRIMARY KEY (id_forma)
 );
 
@@ -179,43 +184,12 @@ CREATE TABLE pagamento (
     FOREIGN KEY (id_forma) REFERENCES forma_pagamento(id_forma)
     ON DELETE RESTRICT ON UPDATE CASCADE
 );
+
 -- ============================================================
--- PARTE de Admin
+-- PASSO 3: CRIAR O ADMINISTRADOR
+-- (estado final em uso — histórico de tentativas anteriores removido)
 -- ============================================================
-ALTER TABLE usuario 
-MODIFY COLUMN tipo_usuario ENUM('PROPRIETARIO', 'LOCATARIO', 'ADMIN') NOT NULL;
 
--- Criar o primeiro admin
-INSERT INTO usuario (nome, email, senha, telefone, tipo_usuario)
-VALUES ('Administrador', 'admin@espacoja.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy2', '00000000000', 'ADMIN');
--- Segundo
-
--- Verifica se o utilizador já existe
-SELECT id_usuario, nome, email, tipo_usuario FROM usuario WHERE email = 'ludivinojosedasilva@gmail.com';
-
--- Atualiza para ADMIN com a senha correta
-SET SQL_SAFE_UPDATES = 0;
-
-UPDATE usuario 
-SET tipo_usuario = 'ADMIN',
-    senha = '$2b$10$QP8ywA740ki3V9VTqLH7De0YfkHmy.IJQVRaDtplGM3Unf/PaW7Ii'
-WHERE email = 'ludivinojosedasilva@gmail.com';
-
-SET SQL_SAFE_UPDATES = 1;
-
--- Confirma
-SELECT id_usuario, nome, email, tipo_usuario FROM usuario WHERE email = 'ludivinojosedasilva@gmail.com';
--- Admin Real
-USE espacoja;
-
--- Remove o admin anterior
-SET SQL_SAFE_UPDATES = 0;
-UPDATE usuario 
-SET tipo_usuario = 'LOCATARIO'
-WHERE email = 'ludivinojosedasilva@gmail.com';
-SET SQL_SAFE_UPDATES = 1;
-
--- Cria o novo admin
 INSERT INTO usuario (nome, email, senha, telefone, tipo_usuario)
 VALUES (
   'Administrador',
@@ -226,20 +200,20 @@ VALUES (
 );
 
 -- Confirma
-SELECT id_usuario, nome, email, tipo_usuario FROM usuario 
-WHERE email IN ('ludivinojosedasilva@gmail.com', 'devludivinojosedasilva@gmail.com');
--- Confirma
-SELECT id_usuario, nome, email, senha, tipo_usuario FROM usuario WHERE tipo_usuario = 'ADMIN';
+SELECT id_usuario, nome, email, tipo_usuario FROM usuario WHERE tipo_usuario = 'ADMIN';
+
 -- Confirma tabelas criadas
 SHOW TABLES;
 
 -- ============================================================
--- PASSO 3: INSERIR DADOS (SEED)
+-- PASSO 4: INSERIR DADOS (SEED)
 -- Execute o ficheiro seed_data_v3.sql
+-- (ou use o botão "Inicializar" no painel admin, que faz o mesmo
+--  seed de forma idempotente — não duplica se rodado mais de uma vez)
 -- ============================================================
 
 -- ============================================================
--- PASSO 4: VERIFICAR OS DADOS
+-- PASSO 5: VERIFICAR OS DADOS
 -- ============================================================
 
 SELECT COUNT(*) AS total_usuarios   FROM usuario;
@@ -252,7 +226,7 @@ SELECT COUNT(*) AS total_pagamentos FROM pagamento;
 SELECT nome, percentual_multa FROM tipo_espaco ORDER BY percentual_multa DESC;
 
 -- ============================================================
--- PASSO 5: CRUD PARA DEMONSTRAÇÃO
+-- PASSO 6: CRUD PARA DEMONSTRAÇÃO
 -- ============================================================
 
 -- INSERT: Novo tipo de espaço
@@ -282,7 +256,7 @@ SET SQL_SAFE_UPDATES = 1;
 SELECT status, COUNT(*) AS total FROM reserva GROUP BY status;
 
 -- ============================================================
--- PASSO 6: AS 3 CONSULTAS SQL COM AGREGAÇÃO
+-- PASSO 7: AS 3 CONSULTAS SQL COM AGREGAÇÃO
 -- ============================================================
 
 -- CONSULTA 1: Receita por tipo de espaço
@@ -328,7 +302,7 @@ GROUP BY DATE_FORMAT(r.data_hora_inicio, '%m/%Y'),
 ORDER BY YEAR(r.data_hora_inicio), MONTH(r.data_hora_inicio);
 
 -- ============================================================
--- PASSO 7: CONSULTAS EXTRAS PARA DEMONSTRAÇÃO
+-- PASSO 8: CONSULTAS EXTRAS PARA DEMONSTRAÇÃO
 -- ============================================================
 
 -- Ver reservas com desconto aplicado
@@ -360,8 +334,35 @@ JOIN usuario u_avaliador ON u_avaliador.id_usuario = a.id_locatario
 JOIN espaco  e           ON e.id_espaco            = a.id_espaco
 ORDER BY a.tipo_avaliacao, a.id_avaliacao;
 
+-- Ver espaços com dono, tipo e imagem principal
+SELECT
+  e.id_espaco,
+  e.nome,
+  e.endereco,
+  e.categoria,
+  e.valor_hora,
+  e.comodidades,
+  e.imagem            AS imagem_principal,
+  t.nome              AS tipo_espaco,
+  u.nome              AS proprietario,
+  u.email             AS proprietario_email
+FROM espaco e
+LEFT JOIN tipo_espaco t ON t.id_tipo = e.id_tipo
+LEFT JOIN usuario u      ON u.id_usuario = e.id_proprietario
+ORDER BY e.id_espaco;
+
+-- Ver galeria de imagens por espaço (tabela imagem_espaco)
+SELECT
+  ie.id_imagem,
+  e.nome            AS espaco,
+  ie.url_imagem,
+  ie.descricao
+FROM imagem_espaco ie
+JOIN espaco e ON e.id_espaco = ie.id_espaco
+ORDER BY e.nome, ie.id_imagem;
+
 -- ============================================================
--- PASSO 8: APAGAR TUDO (para reiniciar os testes)
+-- PASSO 9: APAGAR TUDO (para reiniciar os testes)
 -- ============================================================
 
 SET FOREIGN_KEY_CHECKS = 0;
@@ -383,5 +384,5 @@ SET FOREIGN_KEY_CHECKS = 1;
 SELECT COUNT(*) AS total FROM usuario;
 
 -- ============================================================
--- FIM DO GUIA v2
+-- FIM DO GUIA v3
 -- ============================================================
