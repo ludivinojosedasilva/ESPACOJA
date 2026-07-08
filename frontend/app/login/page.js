@@ -10,7 +10,6 @@ export default function Login() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-
     if (token) {
       window.location.replace("/dashboard");
     }
@@ -31,9 +30,7 @@ export default function Login() {
         `${process.env.NEXT_PUBLIC_API_URL}/login`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password })
         }
       );
@@ -46,10 +43,16 @@ export default function Login() {
       }
 
       localStorage.setItem("token", data.token);
-      window.location.replace("/dashboard");
+
+      // Redireciona conforme o tipo de utilizador
+      if (data.tipoUsuario === "ADMIN") {
+        window.location.replace("/admin");
+      } else {
+        window.location.replace("/dashboard");
+      }
 
     } catch (error) {
-      alert("Erro ao conectar com servidor ❌");
+      alert("Erro ao conectar com servidor");
     } finally {
       setLoading(false);
     }
@@ -61,11 +64,11 @@ export default function Login() {
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl">
 
         <h1 className="text-3xl font-bold text-center mb-2">
-          EspaçoJá
+          EspacoJa
         </h1>
 
         <p className="text-center text-gray-500 mb-6">
-          Faça login para continuar
+          Faca login para continuar
         </p>
 
         <form onSubmit={handleLogin} className="space-y-4">
@@ -99,11 +102,8 @@ export default function Login() {
         </form>
 
         <p className="text-center mt-5 text-sm text-gray-600">
-          Não tem conta?{" "}
-          <Link
-            href="/register"
-            className="text-blue-500 hover:underline"
-          >
+          Nao tem conta?{" "}
+          <Link href="/register" className="text-blue-500 hover:underline">
             Criar conta
           </Link>
         </p>

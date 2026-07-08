@@ -187,6 +187,31 @@ export default function Profile() {
               </div>
             </form>
           )}
+
+          {/* EXCLUIR CONTA */}
+          <div className="mt-6 border-t pt-6">
+            <p className="text-sm text-gray-500 mb-3">Zona de perigo</p>
+            <button
+              onClick={async () => {
+                if (!confirm("Tens a certeza que queres excluir a tua conta? Esta acao e irreversivel.")) return;
+                const token = localStorage.getItem("token");
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${user.id}`, {
+                  method: "DELETE",
+                  headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.ok) {
+                  localStorage.removeItem("token");
+                  alert("Conta excluida com sucesso.");
+                  window.location.href = "/";
+                } else {
+                  alert("Erro ao excluir conta");
+                }
+              }}
+              className="bg-red-100 hover:bg-red-200 text-red-600 font-medium px-5 py-2 rounded-xl transition text-sm"
+            >
+              Excluir Conta
+            </button>
+          </div>
         </div>
 
         {/* STATS */}

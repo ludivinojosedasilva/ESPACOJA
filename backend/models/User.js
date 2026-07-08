@@ -28,8 +28,8 @@ const User = sequelize.define("User", {
     allowNull: true
   },
   tipoUsuario: {
-    type: DataTypes.ENUM("PROPRIETARIO", "LOCATARIO"),
-    allowNull: true,
+    type: DataTypes.ENUM("PROPRIETARIO", "LOCATARIO", "ADMIN"),
+    allowNull: false,
     field: "tipo_usuario"
   },
   tipoPessoa: {

@@ -1010,6 +1010,471 @@ Seja direto e objetivo. Use dados reais do mercado brasileiro.
 });
 
 // ═══════════════════════════════════════════════════════════════
+// 👑 ADMIN — Adiciona no topo do server.js junto com os outros requires
+// ═══════════════════════════════════════════════════════════════
+// const fse = require("fs-extra");
+// const path = require("path"); // já existe
+
+// ═══════════════════════════════════════════════════════════════
+// MIDDLEWARE DE ADMIN
+// Adiciona após o authMiddleware existente
+// ═══════════════════════════════════════════════════════════════
+
+function adminMiddleware(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ message: "Token não fornecido" });
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (decoded.tipoUsuario !== "ADMIN") {
+      return res.status(403).json({ message: "Acesso restrito ao administrador" });
+    }
+    req.user = decoded;
+    next();
+  } catch {
+    return res.status(401).json({ message: "Token inválido" });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 📊 DASHBOARD DO ADMIN — Estatísticas gerais
+// ═══════════════════════════════════════════════════════════════
+
+app.get("/admin/stats", adminMiddleware, async (req, res) => {
+  try {
+    const [
+      totalUsuarios,
+      totalProprietarios,
+      totalLocatarios,
+      totalEspacos,
+      totalReservas,
+      totalPagamentos,
+      totalAvaliacoes,
+      totalFormas
+    ] = await Promise.all([
+      sequelize.query("SELECT COUNT(*) AS total FROM usuario", { type: QueryTypes.SELECT }),
+      sequelize.query("SELECT COUNT(*) AS total FROM proprietario", { type: QueryTypes.SELECT }),
+      sequelize.query("SELECT COUNT(*) AS total FROM locatario", { type: QueryTypes.SELECT }),
+      sequelize.query("SELECT COUNT(*) AS total FROM espaco", { type: QueryTypes.SELECT }),
+      sequelize.query("SELECT COUNT(*) AS total FROM reserva", { type: QueryTypes.SELECT }),
+      sequelize.query("SELECT COUNT(*) AS total FROM pagamento", { type: QueryTypes.SELECT }),
+      sequelize.query("SELECT COUNT(*) AS total FROM avaliacao", { type: QueryTypes.SELECT }),
+      sequelize.query("SELECT COUNT(*) AS total FROM forma_pagamento", { type: QueryTypes.SELECT })
+    ]);
+
+    const reservasPorStatus = await sequelize.query(
+      "SELECT status, COUNT(*) AS total FROM reserva GROUP BY status",
+      { type: QueryTypes.SELECT }
+    );
+
+    const receitaTotal = await sequelize.query(
+      "SELECT SUM(valor_pagamento) AS total FROM pagamento WHERE status = 'APROVADO'",
+      { type: QueryTypes.SELECT }
+    );
+
+    res.json({
+      usuarios: totalUsuarios[0].total,
+      proprietarios: totalProprietarios[0].total,
+      locatarios: totalLocatarios[0].total,
+      espacos: totalEspacos[0].total,
+      reservas: totalReservas[0].total,
+      pagamentos: totalPagamentos[0].total,
+      avaliacoes: totalAvaliacoes[0].total,
+      formasPagamento: totalFormas[0].total,
+      reservasPorStatus,
+      receitaTotal: receitaTotal[0].total || 0
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Erro ao carregar estatísticas" });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// 👤 ADMIN — CRUD DE USUÁRIOS
+// ═══════════════════════════════════════════════════════════════
+
+app.get("/admin/users", adminMiddleware, async (req, res) => {
+  try {
+    const users = await User.findAll({
+      attributes: ["id", "name", "email", "telefone", "tipoUsuario"],
+      order: [["id", "ASC"]]
+    });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao listar usuários" });
+  }
+});
+
+app.put("/admin/users/:id", adminMiddleware, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) return res.status(404).json({ message: "Usuário não encontrado" });
+    const { name, email, telefone, tipoUsuario } = req.body;
+    await user.update({ name, email, telefone, tipoUsuario });
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao atualizar usuário" });
+  }
+});
+
+app.delete("/admin/users/:id", adminMiddleware, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) return res.status(404).json({ message: "Usuário não encontrado" });
+    if (user.tipoUsuario === "ADMIN") {
+      return res.status(400).json({ message: "Não é possível excluir o administrador" });
+    }
+    await user.destroy();
+    res.json({ message: "Usuário excluído com sucesso" });
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao excluir usuário" });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// 🏠 ADMIN — CRUD DE ESPAÇOS
+// ═══════════════════════════════════════════════════════════════
+
+app.get("/admin/spaces", adminMiddleware, async (req, res) => {
+  try {
+    const spaces = await Space.findAll({
+      include: [
+        { model: User, attributes: ["id", "name", "email"] },
+        { model: TipoEspaco, attributes: ["id", "nome"] }
+      ],
+      order: [["id", "DESC"]]
+    });
+    res.json(spaces);
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao listar espaços" });
+  }
+});
+
+app.delete("/admin/spaces/:id", adminMiddleware, async (req, res) => {
+  try {
+    const space = await Space.findByPk(req.params.id);
+    if (!space) return res.status(404).json({ message: "Espaço não encontrado" });
+    await space.destroy();
+    res.json({ message: "Espaço excluído com sucesso" });
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao excluir espaço" });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// 📅 ADMIN — CRUD DE RESERVAS
+// ═══════════════════════════════════════════════════════════════
+
+app.get("/admin/reservations", adminMiddleware, async (req, res) => {
+  try {
+    const reservations = await Reservation.findAll({
+      include: [
+        { model: Space, attributes: ["id", "name"] },
+        { model: User, attributes: ["id", "name", "email"] }
+      ],
+      order: [["startDateTime", "DESC"]]
+    });
+    res.json(reservations);
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao listar reservas" });
+  }
+});
+
+app.put("/admin/reservations/:id", adminMiddleware, async (req, res) => {
+  try {
+    const reservation = await Reservation.findByPk(req.params.id);
+    if (!reservation) return res.status(404).json({ message: "Reserva não encontrada" });
+    await reservation.update(req.body);
+    res.json(reservation);
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao atualizar reserva" });
+  }
+});
+
+app.delete("/admin/reservations/:id", adminMiddleware, async (req, res) => {
+  try {
+    const reservation = await Reservation.findByPk(req.params.id);
+    if (!reservation) return res.status(404).json({ message: "Reserva não encontrada" });
+    await reservation.destroy();
+    res.json({ message: "Reserva excluída com sucesso" });
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao excluir reserva" });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// 💳 ADMIN — CRUD DE FORMAS DE PAGAMENTO
+// ═══════════════════════════════════════════════════════════════
+
+app.delete("/admin/formas-pagamento/:id", adminMiddleware, async (req, res) => {
+  try {
+    const forma = await FormaPagamento.findByPk(req.params.id);
+    if (!forma) return res.status(404).json({ message: "Forma não encontrada" });
+    await forma.destroy();
+    res.json({ message: "Forma de pagamento excluída com sucesso" });
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao excluir forma de pagamento" });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// 💰 ADMIN — CRUD DE PAGAMENTOS
+// ═══════════════════════════════════════════════════════════════
+
+app.get("/admin/pagamentos", adminMiddleware, async (req, res) => {
+  try {
+    const pagamentos = await Pagamento.findAll({
+      include: [
+        { model: Nota },
+        { model: FormaPagamento, attributes: ["id", "nome"] }
+      ],
+      order: [["dataPagamento", "DESC"]]
+    });
+    res.json(pagamentos);
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao listar pagamentos" });
+  }
+});
+
+app.delete("/admin/pagamentos/:id", adminMiddleware, async (req, res) => {
+  try {
+    const pagamento = await Pagamento.findByPk(req.params.id);
+    if (!pagamento) return res.status(404).json({ message: "Pagamento não encontrado" });
+    await pagamento.destroy();
+    res.json({ message: "Pagamento excluído com sucesso" });
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao excluir pagamento" });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// ⭐ ADMIN — CRUD DE AVALIAÇÕES
+// ═══════════════════════════════════════════════════════════════
+
+app.get("/admin/avaliacoes", adminMiddleware, async (req, res) => {
+  try {
+    const avaliacoes = await Avaliacao.findAll({
+      include: [
+        { model: Space, attributes: ["id", "name"] },
+        { model: User, attributes: ["id", "name"] }
+      ],
+      order: [["id", "DESC"]]
+    });
+    res.json(avaliacoes);
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao listar avaliações" });
+  }
+});
+
+app.delete("/admin/avaliacoes/:id", adminMiddleware, async (req, res) => {
+  try {
+    const avaliacao = await Avaliacao.findByPk(req.params.id);
+    if (!avaliacao) return res.status(404).json({ message: "Avaliação não encontrada" });
+    await avaliacao.destroy();
+    res.json({ message: "Avaliação excluída com sucesso" });
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao excluir avaliação" });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// 🗄️ ADMIN — BACKUP E RESTORE DO BANCO
+// ═══════════════════════════════════════════════════════════════
+
+const fse = require("fs-extra");
+const BACKUP_PATH = path.join(__dirname, "backup_dados.json");
+
+// FAZER BACKUP (chamado automaticamente antes de apagar)
+async function fazerBackup() {
+  const [usuarios, espacos, reservas, avaliacoes, notas, pagamentos, formas, tipos] =
+    await Promise.all([
+      sequelize.query("SELECT * FROM usuario",         { type: QueryTypes.SELECT }),
+      sequelize.query("SELECT * FROM espaco",          { type: QueryTypes.SELECT }),
+      sequelize.query("SELECT * FROM reserva",         { type: QueryTypes.SELECT }),
+      sequelize.query("SELECT * FROM avaliacao",       { type: QueryTypes.SELECT }),
+      sequelize.query("SELECT * FROM nota",            { type: QueryTypes.SELECT }),
+      sequelize.query("SELECT * FROM pagamento",       { type: QueryTypes.SELECT }),
+      sequelize.query("SELECT * FROM forma_pagamento", { type: QueryTypes.SELECT }),
+      sequelize.query("SELECT * FROM tipo_espaco",     { type: QueryTypes.SELECT })
+    ]);
+
+  const backup = {
+    criadoEm: new Date().toISOString(),
+    tipo_espaco: tipos,
+    forma_pagamento: formas,
+    usuario: usuarios,
+    espaco: espacos,
+    reserva: reservas,
+    avaliacao: avaliacoes,
+    nota: notas,
+    pagamento: pagamentos
+  };
+
+  await fse.writeJson(BACKUP_PATH, backup, { spaces: 2 });
+  return backup.criadoEm;
+}
+
+// APAGAR TUDO (com backup automático antes)
+app.delete("/admin/banco/apagar", adminMiddleware, async (req, res) => {
+  try {
+    const criadoEm = await fazerBackup();
+
+    await sequelize.query("SET FOREIGN_KEY_CHECKS = 0");
+    const tabelas = [
+      "pagamento", "nota", "avaliacao", "reserva",
+      "imagem_espaco", "espaco", "forma_pagamento", "tipo_espaco",
+      "pessoa_juridica", "pessoa_fisica", "locatario", "proprietario", "usuario"
+    ];
+    for (const t of tabelas) {
+      await sequelize.query(`TRUNCATE TABLE \`${t}\``);
+    }
+    await sequelize.query("SET FOREIGN_KEY_CHECKS = 1");
+
+    res.json({
+      message: "Banco apagado com sucesso. Backup salvo automaticamente.",
+      backupCriadoEm: criadoEm
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Erro ao apagar banco", error: error.message });
+  }
+});
+
+// VERIFICAR SE EXISTE BACKUP
+app.get("/admin/banco/backup-info", adminMiddleware, async (req, res) => {
+  try {
+    const existe = await fse.pathExists(BACKUP_PATH);
+    if (!existe) return res.json({ existe: false });
+    const backup = await fse.readJson(BACKUP_PATH);
+    res.json({
+      existe: true,
+      criadoEm: backup.criadoEm,
+      totais: {
+        usuarios: backup.usuario?.length || 0,
+        espacos: backup.espaco?.length || 0,
+        reservas: backup.reserva?.length || 0,
+        pagamentos: backup.pagamento?.length || 0
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao verificar backup" });
+  }
+});
+
+// RESTAURAR BACKUP
+app.post("/admin/banco/restaurar", adminMiddleware, async (req, res) => {
+  try {
+    const existe = await fse.pathExists(BACKUP_PATH);
+    if (!existe) return res.status(404).json({ message: "Nenhum backup encontrado" });
+
+    const backup = await fse.readJson(BACKUP_PATH);
+
+    await sequelize.query("SET FOREIGN_KEY_CHECKS = 0");
+
+    // Restaura na ordem correta respeitando FKs
+    for (const tipo of backup.tipo_espaco || []) {
+      await sequelize.query(
+        `INSERT IGNORE INTO tipo_espaco (id_tipo, nome, descricao, percentual_multa) VALUES (?, ?, ?, ?)`,
+        { replacements: [tipo.id_tipo, tipo.nome, tipo.descricao, tipo.percentual_multa] }
+      );
+    }
+
+    for (const f of backup.forma_pagamento || []) {
+      await sequelize.query(
+        `INSERT IGNORE INTO forma_pagamento (id_forma, nome) VALUES (?, ?)`,
+        { replacements: [f.id_forma, f.nome] }
+      );
+    }
+
+    for (const u of backup.usuario || []) {
+      await sequelize.query(
+        `INSERT IGNORE INTO usuario (id_usuario, nome, email, senha, telefone, tipo_usuario, tipo_pessoa, cpf, cnpj) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        { replacements: [u.id_usuario, u.nome, u.email, u.senha, u.telefone, u.tipo_usuario, u.tipo_pessoa, u.cpf, u.cnpj] }
+      );
+      if (u.tipo_usuario === "PROPRIETARIO") {
+        await sequelize.query(`INSERT IGNORE INTO proprietario (id_usuario) VALUES (?)`, { replacements: [u.id_usuario] });
+      } else if (u.tipo_usuario === "LOCATARIO") {
+        await sequelize.query(`INSERT IGNORE INTO locatario (id_usuario) VALUES (?)`, { replacements: [u.id_usuario] });
+      }
+    }
+
+    for (const e of backup.espaco || []) {
+      await sequelize.query(
+        `INSERT IGNORE INTO espaco (id_espaco, nome, endereco, categoria, valor_hora, comodidades, descricao, imagem, id_tipo, id_proprietario) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        { replacements: [e.id_espaco, e.nome, e.endereco, e.categoria, e.valor_hora, e.comodidades, e.descricao, e.imagem, e.id_tipo, e.id_proprietario] }
+      );
+    }
+
+    for (const r of backup.reserva || []) {
+      await sequelize.query(
+        `INSERT IGNORE INTO reserva (id_reserva, data_hora_inicio, data_hora_fim, status, valor_total, valor_desconto, valor_multa, id_espaco, id_locatario) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        { replacements: [r.id_reserva, r.data_hora_inicio, r.data_hora_fim, r.status, r.valor_total, r.valor_desconto, r.valor_multa, r.id_espaco, r.id_locatario] }
+      );
+    }
+
+    for (const a of backup.avaliacao || []) {
+      await sequelize.query(
+        `INSERT IGNORE INTO avaliacao (id_avaliacao, id_reserva, tipo_avaliacao, comentario, nota, id_espaco, id_locatario) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        { replacements: [a.id_avaliacao, a.id_reserva, a.tipo_avaliacao, a.comentario, a.nota, a.id_espaco, a.id_locatario] }
+      );
+    }
+
+    for (const n of backup.nota || []) {
+      await sequelize.query(
+        `INSERT IGNORE INTO nota (id_nota, data_nota, valor_nota, id_reserva) VALUES (?, ?, ?, ?)`,
+        { replacements: [n.id_nota, n.data_nota, n.valor_nota, n.id_reserva] }
+      );
+    }
+
+    for (const p of backup.pagamento || []) {
+      await sequelize.query(
+        `INSERT IGNORE INTO pagamento (id_pagamento, data_pagamento, valor_pagamento, status, id_nota, id_forma) VALUES (?, ?, ?, ?, ?, ?)`,
+        { replacements: [p.id_pagamento, p.data_pagamento, p.valor_pagamento, p.status, p.id_nota, p.id_forma] }
+      );
+    }
+
+    await sequelize.query("SET FOREIGN_KEY_CHECKS = 1");
+
+    res.json({
+      message: "Dados restaurados com sucesso!",
+      backupDe: backup.criadoEm
+    });
+  } catch (error) {
+    console.log(error);
+    await sequelize.query("SET FOREIGN_KEY_CHECKS = 1");
+    res.status(500).json({ message: "Erro ao restaurar backup", error: error.message });
+  }
+});
+
+// INICIALIZAR BANCO (seed básico)
+app.post("/admin/banco/inicializar", adminMiddleware, async (req, res) => {
+  try {
+    await sequelize.query(`
+      INSERT IGNORE INTO tipo_espaco (nome, descricao, percentual_multa) VALUES
+      ('Salão de Festas','Espaço para eventos sociais', 15.00),
+      ('Quadra Esportiva','Quadra para esportes variados', 5.00),
+      ('Auditório','Espaço para palestras e conferências', 15.00),
+      ('Apartamento','Imóvel residencial para locação', 15.00),
+      ('Casa','Imóvel completo para locação', 10.00),
+      ('Espaço Coworking','Ambiente para trabalho profissional', 5.00)
+    `);
+
+    await sequelize.query(`
+      INSERT IGNORE INTO forma_pagamento (nome) VALUES
+      ('PIX'),('Cartão de Crédito'),('Cartão de Débito'),
+      ('Boleto Bancário'),('Transferência Bancária')
+    `);
+
+    res.json({ message: "Banco inicializado com dados básicos!" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Erro ao inicializar banco" });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════════════
 // 🚀 START
 // ═══════════════════════════════════════════════════════════════
 sequelize.authenticate()
