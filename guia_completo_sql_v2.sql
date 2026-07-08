@@ -179,7 +179,57 @@ CREATE TABLE pagamento (
     FOREIGN KEY (id_forma) REFERENCES forma_pagamento(id_forma)
     ON DELETE RESTRICT ON UPDATE CASCADE
 );
+-- ============================================================
+-- PARTE de Admin
+-- ============================================================
+ALTER TABLE usuario 
+MODIFY COLUMN tipo_usuario ENUM('PROPRIETARIO', 'LOCATARIO', 'ADMIN') NOT NULL;
 
+-- Criar o primeiro admin
+INSERT INTO usuario (nome, email, senha, telefone, tipo_usuario)
+VALUES ('Administrador', 'admin@espacoja.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy2', '00000000000', 'ADMIN');
+-- Segundo
+
+-- Verifica se o utilizador já existe
+SELECT id_usuario, nome, email, tipo_usuario FROM usuario WHERE email = 'ludivinojosedasilva@gmail.com';
+
+-- Atualiza para ADMIN com a senha correta
+SET SQL_SAFE_UPDATES = 0;
+
+UPDATE usuario 
+SET tipo_usuario = 'ADMIN',
+    senha = '$2b$10$QP8ywA740ki3V9VTqLH7De0YfkHmy.IJQVRaDtplGM3Unf/PaW7Ii'
+WHERE email = 'ludivinojosedasilva@gmail.com';
+
+SET SQL_SAFE_UPDATES = 1;
+
+-- Confirma
+SELECT id_usuario, nome, email, tipo_usuario FROM usuario WHERE email = 'ludivinojosedasilva@gmail.com';
+-- Admin Real
+USE espacoja;
+
+-- Remove o admin anterior
+SET SQL_SAFE_UPDATES = 0;
+UPDATE usuario 
+SET tipo_usuario = 'LOCATARIO'
+WHERE email = 'ludivinojosedasilva@gmail.com';
+SET SQL_SAFE_UPDATES = 1;
+
+-- Cria o novo admin
+INSERT INTO usuario (nome, email, senha, telefone, tipo_usuario)
+VALUES (
+  'Administrador',
+  'devludivinojosedasilva@gmail.com',
+  '$2b$10$QP8ywA740ki3V9VTqLH7De0YfkHmy.IJQVRaDtplGM3Unf/PaW7Ii',
+  NULL,
+  'ADMIN'
+);
+
+-- Confirma
+SELECT id_usuario, nome, email, tipo_usuario FROM usuario 
+WHERE email IN ('ludivinojosedasilva@gmail.com', 'devludivinojosedasilva@gmail.com');
+-- Confirma
+SELECT id_usuario, nome, email, senha, tipo_usuario FROM usuario WHERE tipo_usuario = 'ADMIN';
 -- Confirma tabelas criadas
 SHOW TABLES;
 

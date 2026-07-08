@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import React from "react";
 
 export default function AdminUsuarios() {
   const router = useRouter();
@@ -80,7 +81,7 @@ export default function AdminUsuarios() {
             </thead>
             <tbody>
               {users.map(u => (
-                <>
+                <React.Fragment key={u.id}>
                   <tr key={u.id} className="border-t border-gray-700 hover:bg-gray-750">
                     <td className="p-4 text-gray-400">{u.id}</td>
                     <td className="p-4 font-medium">{u.name}</td>
@@ -133,7 +134,7 @@ export default function AdminUsuarios() {
                       </td>
                     </tr>
                   )}
-                </>
+                </React.Fragment>
               ))}
             </tbody>
           </table>

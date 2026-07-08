@@ -1,0 +1,1256 @@
+{
+  "criadoEm": "2026-07-08T19:16:09.424Z",
+  "tipo_espaco": [
+    {
+      "id_tipo": 1,
+      "nome": "Salão de Festas",
+      "descricao": "Espaço para eventos sociais e comemorações",
+      "percentual_multa": "15.00"
+    },
+    {
+      "id_tipo": 2,
+      "nome": "Quadra Esportiva",
+      "descricao": "Quadra para prática de esportes variados",
+      "percentual_multa": "5.00"
+    },
+    {
+      "id_tipo": 3,
+      "nome": "Auditório",
+      "descricao": "Espaço para palestras, reuniões e conferências",
+      "percentual_multa": "15.00"
+    },
+    {
+      "id_tipo": 4,
+      "nome": "Apartamento",
+      "descricao": "Imóvel residencial para locação temporária",
+      "percentual_multa": "15.00"
+    },
+    {
+      "id_tipo": 5,
+      "nome": "Casa",
+      "descricao": "Imóvel residencial completo para locação",
+      "percentual_multa": "10.00"
+    },
+    {
+      "id_tipo": 6,
+      "nome": "Espaço Coworking",
+      "descricao": "Ambiente compartilhado para trabalho profissional",
+      "percentual_multa": "5.00"
+    },
+    {
+      "id_tipo": 7,
+      "nome": "Salão de Festas",
+      "descricao": "Espaço para eventos sociais e comemorações",
+      "percentual_multa": "15.00"
+    },
+    {
+      "id_tipo": 8,
+      "nome": "Quadra Esportiva",
+      "descricao": "Quadra para prática de esportes variados",
+      "percentual_multa": "5.00"
+    },
+    {
+      "id_tipo": 9,
+      "nome": "Auditório",
+      "descricao": "Espaço para palestras, reuniões e conferências",
+      "percentual_multa": "15.00"
+    },
+    {
+      "id_tipo": 10,
+      "nome": "Apartamento",
+      "descricao": "Imóvel residencial para locação temporária",
+      "percentual_multa": "15.00"
+    },
+    {
+      "id_tipo": 11,
+      "nome": "Casa",
+      "descricao": "Imóvel residencial completo para locação",
+      "percentual_multa": "10.00"
+    },
+    {
+      "id_tipo": 12,
+      "nome": "Espaço Coworking",
+      "descricao": "Ambiente compartilhado para trabalho profissional",
+      "percentual_multa": "5.00"
+    },
+    {
+      "id_tipo": 13,
+      "nome": "Salão de Festas",
+      "descricao": "Espaço para eventos sociais e comemorações",
+      "percentual_multa": "15.00"
+    },
+    {
+      "id_tipo": 14,
+      "nome": "Quadra Esportiva",
+      "descricao": "Quadra para prática de esportes variados",
+      "percentual_multa": "5.00"
+    },
+    {
+      "id_tipo": 15,
+      "nome": "Auditório",
+      "descricao": "Espaço para palestras, reuniões e conferências",
+      "percentual_multa": "15.00"
+    },
+    {
+      "id_tipo": 16,
+      "nome": "Apartamento",
+      "descricao": "Imóvel residencial para locação temporária",
+      "percentual_multa": "15.00"
+    },
+    {
+      "id_tipo": 17,
+      "nome": "Casa",
+      "descricao": "Imóvel residencial completo para locação",
+      "percentual_multa": "10.00"
+    },
+    {
+      "id_tipo": 18,
+      "nome": "Espaço Coworking",
+      "descricao": "Ambiente compartilhado para trabalho profissional",
+      "percentual_multa": "5.00"
+    },
+    {
+      "id_tipo": 19,
+      "nome": "Salão de Festas",
+      "descricao": "Espaço para eventos sociais e comemorações",
+      "percentual_multa": "15.00"
+    },
+    {
+      "id_tipo": 20,
+      "nome": "Quadra Esportiva",
+      "descricao": "Quadra para prática de esportes variados",
+      "percentual_multa": "5.00"
+    },
+    {
+      "id_tipo": 21,
+      "nome": "Auditório",
+      "descricao": "Espaço para palestras, reuniões e conferências",
+      "percentual_multa": "15.00"
+    },
+    {
+      "id_tipo": 22,
+      "nome": "Apartamento",
+      "descricao": "Imóvel residencial para locação temporária",
+      "percentual_multa": "15.00"
+    },
+    {
+      "id_tipo": 23,
+      "nome": "Casa",
+      "descricao": "Imóvel residencial completo para locação",
+      "percentual_multa": "10.00"
+    },
+    {
+      "id_tipo": 24,
+      "nome": "Espaço Coworking",
+      "descricao": "Ambiente compartilhado para trabalho profissional",
+      "percentual_multa": "5.00"
+    },
+    {
+      "id_tipo": 25,
+      "nome": "Salão de Festas",
+      "descricao": "Espaço para eventos sociais",
+      "percentual_multa": "15.00"
+    },
+    {
+      "id_tipo": 26,
+      "nome": "Quadra Esportiva",
+      "descricao": "Quadra para esportes variados",
+      "percentual_multa": "5.00"
+    },
+    {
+      "id_tipo": 27,
+      "nome": "Auditório",
+      "descricao": "Espaço para palestras e conferências",
+      "percentual_multa": "15.00"
+    },
+    {
+      "id_tipo": 28,
+      "nome": "Apartamento",
+      "descricao": "Imóvel residencial para locação",
+      "percentual_multa": "15.00"
+    },
+    {
+      "id_tipo": 29,
+      "nome": "Casa",
+      "descricao": "Imóvel completo para locação",
+      "percentual_multa": "10.00"
+    },
+    {
+      "id_tipo": 30,
+      "nome": "Espaço Coworking",
+      "descricao": "Ambiente para trabalho profissional",
+      "percentual_multa": "5.00"
+    }
+  ],
+  "forma_pagamento": [
+    {
+      "id_forma": 1,
+      "nome": "PIX"
+    },
+    {
+      "id_forma": 2,
+      "nome": "Cartão de Crédito"
+    },
+    {
+      "id_forma": 3,
+      "nome": "Cartão de Débito"
+    },
+    {
+      "id_forma": 4,
+      "nome": "Boleto Bancário"
+    },
+    {
+      "id_forma": 5,
+      "nome": "Transferência Bancária"
+    }
+  ],
+  "usuario": [
+    {
+      "id_usuario": 1,
+      "nome": "MARCOS MENDES",
+      "email": "lud8@gmail.com",
+      "senha": "$2b$10$JfNv5ehxXCuWqO8b6z9RN.SSJ73HLxbxNGAY5xY8ZPjp9i2o04BZG",
+      "telefone": "",
+      "tipo_usuario": "LOCATARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 2,
+      "nome": "Administrador",
+      "email": "devludivinojosedasilva@gmail.com",
+      "senha": "$2b$10$QP8ywA740ki3V9VTqLH7De0YfkHmy.IJQVRaDtplGM3Unf/PaW7Ii",
+      "telefone": null,
+      "tipo_usuario": "ADMIN",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 12,
+      "nome": "DAISY GOMES",
+      "email": "notragat@fosil.pro",
+      "senha": "$2b$10$cUgxbVjhMatkTFbZaxKDBub3HqgivpnqLZoDQtDXBI45NeekASZdu",
+      "telefone": "85986315048",
+      "tipo_usuario": "LOCATARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 13,
+      "nome": "DAISY GOMES",
+      "email": "wodikat344@fixscal.com",
+      "senha": "$2b$10$cXC/hBiowcbSaXOrTQWmzOsipvA.mOSB3OUBtYKbMhAMlyNFaQVnS",
+      "telefone": "85986315048",
+      "tipo_usuario": "LOCATARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 14,
+      "nome": "JURPINHO GOMES",
+      "email": "wodikat345@fixscal.com",
+      "senha": "$2b$10$cAuixPO.5.fUU4h/lTZOfOFeGPoqjosKPqe1tklhVvFEEsv8k91fi",
+      "telefone": "85986315048",
+      "tipo_usuario": "PROPRIETARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 15,
+      "nome": "Ludivino Jose Da Silva",
+      "email": "ludivinojosedasilva1@gmail.com",
+      "senha": "$2b$10$qZb3raOaj3zIToayve0BpujnSY2Gt/o.baalIqtmKjee1xCyy49wW",
+      "telefone": "85986315048",
+      "tipo_usuario": "LOCATARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 16,
+      "nome": "universidade federal de santa catarina",
+      "email": "ludivinojosedasilva@gmail.com",
+      "senha": "$2b$10$QP8ywA740ki3V9VTqLH7De0YfkHmy.IJQVRaDtplGM3Unf/PaW7Ii",
+      "telefone": "85986315047",
+      "tipo_usuario": "LOCATARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 17,
+      "nome": "Ludivino Jose Da Silva",
+      "email": "ludivinojosedasilva4@gmail.com",
+      "senha": "$2b$10$0ZdB11FY6n8V6JFzrY3i..k4U4NYcYM2tj/m/lOlHIzkQzCPwFh1C",
+      "telefone": "85986315047",
+      "tipo_usuario": "LOCATARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 18,
+      "nome": "Ludivino Jose Da Silva",
+      "email": "ludivinojosedasilva6@gmail.com",
+      "senha": "$2b$10$AvV0CuApzVjUB3IMNv6I7e6bRu2jQ4dIW1gyefid2pofFv1V30uvG",
+      "telefone": "85986315047",
+      "tipo_usuario": "LOCATARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 19,
+      "nome": "universidade federal de santa catarina",
+      "email": "ludi@gmail.com",
+      "senha": "$2b$10$5EwXC/u4aVUXxKbQWaZr5OCCMJ.5uP3SfdjPAUPIoHIKx7VRsrJSe",
+      "telefone": "85986315047",
+      "tipo_usuario": "LOCATARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 20,
+      "nome": "Ludivino José Da Silva",
+      "email": "ludi1@gmail.com",
+      "senha": "$2b$10$pavO4OP7ofEyBt6MAnzCCe/S.zbOiD.SHtoBkHBaroeQqsyjxVMiK",
+      "telefone": "85986315047",
+      "tipo_usuario": "LOCATARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 21,
+      "nome": "LUDIVINO JOSÉ DA SILVA",
+      "email": "ludi2@gmail.com",
+      "senha": "$2b$10$hwT3ugR1i6aqpQ5lT4/ZAOgcvHJNQEJrX5lYEjjWSlf.SoAbF5ZzK",
+      "telefone": "85986315047",
+      "tipo_usuario": "PROPRIETARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 22,
+      "nome": "Jurpinho Juca Soares",
+      "email": "ludi3@gmail.com",
+      "senha": "$2b$10$kx94naHMMnjE.HfBWwn1v.F/23v.iyBUhCaSOrvW2WFnIJg5/FbI2",
+      "telefone": "85986315048",
+      "tipo_usuario": "PROPRIETARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 23,
+      "nome": "Mamadjam Jaló",
+      "email": "ludi4@gmail.com",
+      "senha": "$2b$10$muvLok.tnp6b3gph.THSfeEW1J3jD6xHV26LIKz40bh.C7HEyAiti",
+      "telefone": "85986315049",
+      "tipo_usuario": "PROPRIETARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 24,
+      "nome": "Daisy Gomes Cá",
+      "email": "ludi5@gmail.com",
+      "senha": "$2b$10$00fcxW89d93WAG5J/cLHQ.OGUGQ33Cj9TXJBevDwM61xrNpIdThre",
+      "telefone": "85986315047",
+      "tipo_usuario": "PROPRIETARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 25,
+      "nome": "Administrador",
+      "email": "admin@espacoja.com",
+      "senha": "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy2",
+      "telefone": "00000000000",
+      "tipo_usuario": "ADMIN",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 26,
+      "nome": "Administrador1",
+      "email": "admin1@espacoja.com",
+      "senha": "senha123",
+      "telefone": "0000050000",
+      "tipo_usuario": "ADMIN",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 28,
+      "nome": "Carlos Mendes",
+      "email": "carlos@email.com",
+      "senha": "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy2",
+      "telefone": "51999990001",
+      "tipo_usuario": "PROPRIETARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 29,
+      "nome": "Ana Souza",
+      "email": "ana@email.com",
+      "senha": "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy2",
+      "telefone": "51999990002",
+      "tipo_usuario": "PROPRIETARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 30,
+      "nome": "Roberto Lima",
+      "email": "roberto@email.com",
+      "senha": "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy2",
+      "telefone": "51999990003",
+      "tipo_usuario": "PROPRIETARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 31,
+      "nome": "Fernanda Costa",
+      "email": "fernanda@email.com",
+      "senha": "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy2",
+      "telefone": "48999990004",
+      "tipo_usuario": "LOCATARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 32,
+      "nome": "João Pereira",
+      "email": "joao@email.com",
+      "senha": "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy2",
+      "telefone": "48999990005",
+      "tipo_usuario": "LOCATARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 33,
+      "nome": "Mariana Alves",
+      "email": "mariana@email.com",
+      "senha": "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy2",
+      "telefone": "48999990006",
+      "tipo_usuario": "LOCATARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 34,
+      "nome": "Pedro Oliveira",
+      "email": "pedro@email.com",
+      "senha": "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy2",
+      "telefone": "51999990007",
+      "tipo_usuario": "LOCATARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 35,
+      "nome": "Lucia Ferreira",
+      "email": "lucia@email.com",
+      "senha": "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy2",
+      "telefone": "51999990008",
+      "tipo_usuario": "LOCATARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 36,
+      "nome": "Marcos Rocha",
+      "email": "marcos@email.com",
+      "senha": "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy2",
+      "telefone": "51999990009",
+      "tipo_usuario": "LOCATARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 37,
+      "nome": "Beatriz Santos",
+      "email": "beatriz@email.com",
+      "senha": "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy2",
+      "telefone": "48999990010",
+      "tipo_usuario": "LOCATARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    },
+    {
+      "id_usuario": 58,
+      "nome": "Marcos",
+      "email": "teste@gmail.com",
+      "senha": "$2b$10$0/MSJcYXuMMszIb6g1ySkOUuaNBlGbVZSJfJ3tkgmArTlA/3IYwBi",
+      "telefone": "85986578047",
+      "tipo_usuario": "LOCATARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
+    }
+  ],
+  "espaco": [
+    {
+      "id_espaco": 16,
+      "nome": "Quadra INEP",
+      "endereco": "Jardim das Avenidas, Araranguá",
+      "categoria": null,
+      "valor_hora": "140.00",
+      "comodidades": "Bolas, Coletes ou Equipamentos para os dois times, bebedouro e churrasqueira",
+      "descricao": "Alugue nossa quadra esportiva e tenha o espaço ideal para praticar esportes, realizar treinamentos, campeonatos, confraternizações e eventos recreativos.\r\n\r\n✅ Estrutura ampla e bem conservada\r\n✅ Iluminação para jogos noturnos\r\n✅ Ambiente seguro e organizado\r\n✅ Ideal para futebol, futsal, vôlei e outras modalidades\r\n✅ Horários flexíveis para locação\r\n✅ Excelente localização e fácil acesso\r\n\r\nPerfeita para grupos de amigos, equipes esportivas, escolas e empresas que buscam um local de qualidade para atividades esportivas e lazer.",
+      "id_tipo": 2,
+      "id_proprietario": 14,
+      "imagem": "/uploads/1781195037826.jpg"
+    },
+    {
+      "id_espaco": 17,
+      "nome": "Recanto das Palmeiras",
+      "endereco": "Pantanal, Florianópolis",
+      "categoria": null,
+      "valor_hora": "50.00",
+      "comodidades": "Estacionamento privativo, Cozinha equipada, Wi-Fi gratuito, Área para som e apresentaçõe, Ambiente pet-friendly, Mesas e cadeiras disponíveis. ",
+      "descricao": "O Recanto das Palmeiras é um espaço acolhedor e versátil, ideal para a realização de eventos sociais, corporativos e momentos de lazer em família. Cercado pela natureza e com uma atmosfera tranquila, o local oferece conforto, segurança e infraestrutura completa para tornar qualquer ocasião especial. Seja para aniversários, confraternizações, casamentos, retiros, encontros de amigos ou eventos empresariais, o Recanto das Palmeiras proporciona uma experiência agradável em um ambiente amplo e bem cuidado.",
+      "id_tipo": 5,
+      "id_proprietario": 14,
+      "imagem": "/uploads/1781195627435.jpeg"
+    },
+    {
+      "id_espaco": 18,
+      "nome": "Salão Royal",
+      "endereco": "Centro, Criciúma - SC",
+      "categoria": null,
+      "valor_hora": "180.00",
+      "comodidades": "Área para buffet, Wi-Fi gratuito, Mesas e cadeiras inclusas, Segurança e monitoramento, Acesso para pessoas com mobilidade reduzida, Limpeza e manutenção do espaço, 👥 Capacidade: Até 200 pessoas",
+      "descricao": "O Salão Royal é um espaço elegante e sofisticado, projetado para receber eventos inesquecíveis com conforto e excelência. Com ambiente amplo, decoração refinada e infraestrutura completa, o local é ideal para casamentos, aniversários, formaturas, confraternizações, eventos corporativos e celebrações especiais. O Salão Royal oferece um ambiente acolhedor e versátil, capaz de atender eventos de diferentes portes, proporcionando uma experiência única para anfitriões e convidados.",
+      "id_tipo": 1,
+      "id_proprietario": 14,
+      "imagem": "/uploads/1781196569654.jpg"
+    },
+    {
+      "id_espaco": 19,
+      "nome": "Casa da Inovação",
+      "endereco": "Jardim das Avenidas, Araranguá - SC",
+      "categoria": null,
+      "valor_hora": "70.00",
+      "comodidades": "Wi-Fi de alta velocidade, Ar-condicionado, Impressora e scanner, Projetor multimídia, Smart TV para apresentações, Estacionamento, Café, chá e água à vontade, 👥 Capacidade: Até 60 pessoas.",
+      "descricao": "A Casa da Inovação é um espaço de coworking moderno e inspirador, desenvolvido para profissionais, empreendedores, startups, estudantes e equipes que procuram um ambiente produtivo e colaborativo. Com infraestrutura completa, tecnologia de ponta e espaços planejados para estimular a criatividade, o local oferece o equilíbrio ideal entre conforto, networking e produtividade. Seja para trabalhar, estudar, realizar reuniões ou desenvolver novos projetos, a Casa da Inovação proporciona uma experiência profissional em um ambiente dinâmico e acolhedor.",
+      "id_tipo": 6,
+      "id_proprietario": 21,
+      "imagem": "/uploads/1781198831278.jpg"
+    },
+    {
+      "id_espaco": 20,
+      "nome": "Auditório Horizonte",
+      "endereco": "Centro, Criciúma - SC",
+      "categoria": null,
+      "valor_hora": "100.00",
+      "comodidades": "Área para coffee break, Ar-condicionado, Sistema de som profissional, Microfones sem fio e de lapela, Capacidade para até 200 pessoas, Palco para apresentações",
+      "descricao": "O Auditório Horizonte é um espaço moderno e bem equipado, ideal para palestras, seminários, conferências, treinamentos, workshops, apresentações acadêmicas e eventos corporativos. Com estrutura profissional, ambiente confortável e recursos audiovisuais de alta qualidade, o auditório proporciona uma excelente experiência tanto para os organizadores quanto para os participantes. O espaço foi projetado para oferecer praticidade, conforto e suporte tecnológico para eventos de diferentes portes.",
+      "id_tipo": 3,
+      "id_proprietario": 21,
+      "imagem": "/uploads/1781202696505.jpg"
+    },
+    {
+      "id_espaco": 21,
+      "nome": "QUADRA ART SOCCER",
+      "endereco": "Araranguá, Jardim das Avenidas - SC",
+      "categoria": null,
+      "valor_hora": "130.00",
+      "comodidades": "Vestiários com chuveiros e armários, Disponibilidade de bolas e equipamentos básicos, Estacionamento privativo, Área de convivência com bancos e sombra e Bebedouro de água gelada disponível",
+      "descricao": "Quadra desportiva equipada para oferecer praticidade e bem-estar. Conta com vestiários completos, estacionamento privativo e área de convivência com bancos e sombra. Disponibilidade de bolas e equipamentos básicos, além de bebedouro de água gelada para manter a hidratação durante os jogos. Um espaço pensado para quem busca esporte com comodidade.",
+      "id_tipo": 2,
+      "id_proprietario": 21,
+      "imagem": "/uploads/1782438263491.jpg"
+    },
+    {
+      "id_espaco": 22,
+      "nome": "Apartamento Vista Sul",
+      "endereco": "Centro, Araranguá",
+      "categoria": null,
+      "valor_hora": "80.00",
+      "comodidades": "Wi-Fi, ar-condicionado, cozinha equipada, garagem coberta, TV smart, varanda com vista.",
+      "descricao": "Apartamento moderno e aconchegante com vista panorâmica da cidade, ideal para hospedagens curtas ou longas. O ambiente é bem iluminado, com decoração contemporânea e todos os itens necessários para uma estadia confortável.",
+      "id_tipo": 4,
+      "id_proprietario": 22,
+      "imagem": "/uploads/1782439512267.jpg"
+    },
+    {
+      "id_espaco": 23,
+      "nome": "Auditório Atlântico",
+      "endereco": "Cidade Alta, Araranguá",
+      "categoria": null,
+      "valor_hora": "60.00",
+      "comodidades": "Sistema de som profissional, projetor multimídia, cadeiras acolchoadas, climatização, estacionamento privativo, recepção e copa de apoio.",
+      "descricao": "Espaço profissional projetado para eventos corporativos, palestras e treinamentos. O auditório oferece excelente acústica e infraestrutura completa para apresentações de alto nível.",
+      "id_tipo": 3,
+      "id_proprietario": 22,
+      "imagem": "/uploads/1782439810917.jpg"
+    },
+    {
+      "id_espaco": 24,
+      "nome": "Casa Recanto do Sol",
+      "endereco": "Balneário Arroio do Silva",
+      "categoria": null,
+      "valor_hora": "85.00",
+      "comodidades": "Churrasqueira, piscina, Wi-Fi, cozinha completa, área verde, estacionamento privativo, varanda com rede.",
+      "descricao": "Casa espaçosa e arejada, localizada a poucos minutos da praia. Ideal para famílias e grupos que buscam lazer e descanso em um ambiente tranquilo.",
+      "id_tipo": 5,
+      "id_proprietario": 23,
+      "imagem": "/uploads/1782440220495.jpg"
+    },
+    {
+      "id_espaco": 25,
+      "nome": "Coworking Conexão Sul",
+      "endereco": "Centro, Araranguá",
+      "categoria": null,
+      "valor_hora": "80.00",
+      "comodidades": "Internet de alta velocidade, salas de reunião, café e snacks, impressora, ar-condicionado, área de descanso.",
+      "descricao": " Ambiente moderno e colaborativo para profissionais autônomos e pequenas empresas. O espaço estimula a criatividade e a troca de ideias, com estrutura pensada para produtividade.",
+      "id_tipo": 6,
+      "id_proprietario": 23,
+      "imagem": "/uploads/1782440817463.png"
+    },
+    {
+      "id_espaco": 26,
+      "nome": "Quadra Esportiva Tapete Verde",
+      "endereco": "Meleiro - SC",
+      "categoria": null,
+      "valor_hora": "120.00",
+      "comodidades": "Vestiários com chuveiros e armários, bebedouro de água gelada, estacionamento privativo, bolas e equipamentos básicos, área de convivência com sombra.",
+      "descricao": "Quadra desportiva com piso em tapete esportivo, ideal para futsal, vôlei e treinos funcionais. O espaço é seguro e bem cuidado, perfeito para jogos e eventos esportivos.",
+      "id_tipo": 2,
+      "id_proprietario": 23,
+      "imagem": "/uploads/1782441574983.jpg"
+    },
+    {
+      "id_espaco": 27,
+      "nome": "Casa Praia Bela",
+      "endereco": "Balneário Arroio do Silva",
+      "categoria": null,
+      "valor_hora": "80.00",
+      "comodidades": "Churrasqueira, varanda com rede, Wi-Fi, cozinha equipada, estacionamento, jardim com área de descanso.",
+      "descricao": "Casa charmosa e acolhedora a poucos metros do mar, ideal para quem busca tranquilidade e lazer. O ambiente é perfeito para relaxar e aproveitar o melhor do litoral catarinense.",
+      "id_tipo": 5,
+      "id_proprietario": 22,
+      "imagem": "/uploads/1782443797367.jpg"
+    },
+    {
+      "id_espaco": 28,
+      "nome": "Auditório Serra Azul",
+      "endereco": "Turvo",
+      "categoria": null,
+      "valor_hora": "85.00",
+      "comodidades": "Som profissional, projetor, palco, climatização, estacionamento amplo, recepção e área de coffee break.",
+      "descricao": "Auditório elegante e versátil, ideal para conferências, workshops e eventos culturais. O espaço combina conforto e tecnologia para garantir experiências memoráveis.",
+      "id_tipo": 3,
+      "id_proprietario": 24,
+      "imagem": "/uploads/1782446629529.jpg"
+    },
+    {
+      "id_espaco": 29,
+      "nome": "Apartamento Jardim das Palmeiras",
+      "endereco": "Bairro Coloninha, Araranguá",
+      "categoria": null,
+      "valor_hora": "80.00",
+      "comodidades": "Wi-Fi, cozinha equipada, lavanderia, garagem, TV smart, ar-condicionado, varanda.",
+      "descricao": "Apartamento confortável e bem localizado, perfeito para quem busca praticidade e comodidade. Ideal para estadias de trabalho ou lazer, com ambiente tranquilo e seguro.",
+      "id_tipo": 4,
+      "id_proprietario": 24,
+      "imagem": "/uploads/1782447324281.jpg"
+    },
+    {
+      "id_espaco": 30,
+      "nome": "Espaço Coworking Criativa",
+      "endereco": "Sombrio",
+      "categoria": null,
+      "valor_hora": "50.00",
+      "comodidades": "Internet rápida, salas privativas, café, impressora, área de descanso, climatização.",
+      "descricao": "Local inspirador para empreendedores e freelancers, com ambiente moderno e acolhedor. O espaço promove conexões e produtividade em um clima descontraído.",
+      "id_tipo": 6,
+      "id_proprietario": 24,
+      "imagem": "/uploads/1782447571686.jpg"
+    },
+    {
+      "id_espaco": 31,
+      "nome": "Quadra Esportiva Arena Sul",
+      "endereco": "Morro dos Conventos",
+      "categoria": null,
+      "valor_hora": "130.00",
+      "comodidades": "Tapete esportivo, vestiários, bebedouro, estacionamento, área de convivência com sombra, disponibilidade de bolas e equipamentos básicos.",
+      "descricao": "Estrutura completa para jogos e eventos esportivos, com ambiente seguro e bem cuidado. Ideal para treinos, campeonatos e confraternizações esportivas.",
+      "id_tipo": 2,
+      "id_proprietario": 24,
+      "imagem": "/uploads/1782447797287.png"
+    }
+  ],
+  "reserva": [
+    {
+      "id_reserva": 17,
+      "data_hora_inicio": "2026-07-27T21:40:00.000Z",
+      "data_hora_fim": "2026-07-28T01:00:00.000Z",
+      "status": "FINALIZADA",
+      "valor_total": "333.33",
+      "valor_desconto": "0.00",
+      "valor_multa": "0.00",
+      "id_espaco": 20,
+      "id_locatario": 20
+    },
+    {
+      "id_reserva": 18,
+      "data_hora_inicio": "2026-06-20T21:00:00.000Z",
+      "data_hora_fim": "2026-06-20T23:00:00.000Z",
+      "status": "FINALIZADA",
+      "valor_total": "140.00",
+      "valor_desconto": "0.00",
+      "valor_multa": "0.00",
+      "id_espaco": 19,
+      "id_locatario": 20
+    },
+    {
+      "id_reserva": 19,
+      "data_hora_inicio": "2026-07-26T21:59:00.000Z",
+      "data_hora_fim": "2026-07-28T23:00:00.000Z",
+      "status": "CANCELADA",
+      "valor_total": "6176.10",
+      "valor_desconto": "686.23",
+      "valor_multa": "0.00",
+      "id_espaco": 16,
+      "id_locatario": 20
+    },
+    {
+      "id_reserva": 20,
+      "data_hora_inicio": "2026-07-27T22:00:00.000Z",
+      "data_hora_fim": "2026-07-29T23:00:00.000Z",
+      "status": "FINALIZADA",
+      "valor_total": "4410.00",
+      "valor_desconto": "490.00",
+      "valor_multa": "0.00",
+      "id_espaco": 20,
+      "id_locatario": 19
+    },
+    {
+      "id_reserva": 21,
+      "data_hora_inicio": "2026-07-27T21:00:00.000Z",
+      "data_hora_fim": "2026-07-27T23:00:00.000Z",
+      "status": "FINALIZADA",
+      "valor_total": "180.00",
+      "valor_desconto": "20.00",
+      "valor_multa": "0.00",
+      "id_espaco": 20,
+      "id_locatario": 20
+    },
+    {
+      "id_reserva": 22,
+      "data_hora_inicio": "2026-07-23T23:00:00.000Z",
+      "data_hora_fim": "2026-07-24T01:00:00.000Z",
+      "status": "CANCELADA",
+      "valor_total": "180.00",
+      "valor_desconto": "20.00",
+      "valor_multa": "0.00",
+      "id_espaco": 20,
+      "id_locatario": 20
+    },
+    {
+      "id_reserva": 23,
+      "data_hora_inicio": "2026-07-23T14:00:00.000Z",
+      "data_hora_fim": "2026-07-23T21:00:00.000Z",
+      "status": "CANCELADA",
+      "valor_total": "630.00",
+      "valor_desconto": "70.00",
+      "valor_multa": "0.00",
+      "id_espaco": 20,
+      "id_locatario": 20
+    },
+    {
+      "id_reserva": 24,
+      "data_hora_inicio": "2026-06-25T21:00:00.000Z",
+      "data_hora_fim": "2026-06-26T02:00:00.000Z",
+      "status": "CANCELADA",
+      "valor_total": "350.00",
+      "valor_desconto": "0.00",
+      "valor_multa": "17.50",
+      "id_espaco": 19,
+      "id_locatario": 20
+    },
+    {
+      "id_reserva": 25,
+      "data_hora_inicio": "2026-06-25T21:00:00.000Z",
+      "data_hora_fim": "2026-06-25T23:00:00.000Z",
+      "status": "FINALIZADA",
+      "valor_total": "140.00",
+      "valor_desconto": "0.00",
+      "valor_multa": "0.00",
+      "id_espaco": 19,
+      "id_locatario": 20
+    },
+    {
+      "id_reserva": 26,
+      "data_hora_inicio": "2026-06-28T21:00:00.000Z",
+      "data_hora_fim": "2026-06-28T23:00:00.000Z",
+      "status": "CANCELADA",
+      "valor_total": "260.00",
+      "valor_desconto": "0.00",
+      "valor_multa": "13.00",
+      "id_espaco": 31,
+      "id_locatario": 20
+    },
+    {
+      "id_reserva": 32,
+      "data_hora_inicio": "2026-07-08T16:00:00.000Z",
+      "data_hora_fim": "2026-07-08T23:00:00.000Z",
+      "status": "FINALIZADA",
+      "valor_total": "910.00",
+      "valor_desconto": "0.00",
+      "valor_multa": "0.00",
+      "id_espaco": 31,
+      "id_locatario": 58
+    },
+    {
+      "id_reserva": 33,
+      "data_hora_inicio": "2026-07-08T17:00:00.000Z",
+      "data_hora_fim": "2026-07-08T19:00:00.000Z",
+      "status": "CANCELADA",
+      "valor_total": "100.00",
+      "valor_desconto": "0.00",
+      "valor_multa": "5.00",
+      "id_espaco": 30,
+      "id_locatario": 58
+    },
+    {
+      "id_reserva": 34,
+      "data_hora_inicio": "2026-07-18T23:00:00.000Z",
+      "data_hora_fim": "2026-07-21T01:00:00.000Z",
+      "status": "FINALIZADA",
+      "valor_total": "4000.00",
+      "valor_desconto": "0.00",
+      "valor_multa": "0.00",
+      "id_espaco": 29,
+      "id_locatario": 58
+    },
+    {
+      "id_reserva": 35,
+      "data_hora_inicio": "2026-07-22T17:00:00.000Z",
+      "data_hora_fim": "2026-07-25T23:00:00.000Z",
+      "status": "FINALIZADA",
+      "valor_total": "6630.00",
+      "valor_desconto": "0.00",
+      "valor_multa": "0.00",
+      "id_espaco": 28,
+      "id_locatario": 58
+    },
+    {
+      "id_reserva": 36,
+      "data_hora_inicio": "2026-07-27T13:00:00.000Z",
+      "data_hora_fim": "2026-07-27T22:00:00.000Z",
+      "status": "FINALIZADA",
+      "valor_total": "720.00",
+      "valor_desconto": "0.00",
+      "valor_multa": "0.00",
+      "id_espaco": 27,
+      "id_locatario": 58
+    }
+  ],
+  "avaliacao": [
+    {
+      "id_avaliacao": 7,
+      "id_reserva": null,
+      "comentario": "Muito bom, mas poderia ser melhor.",
+      "nota": 4,
+      "id_espaco": 20,
+      "id_locatario": 20,
+      "tipo_avaliacao": "LOCATARIO_AVALIA_ESPACO"
+    },
+    {
+      "id_avaliacao": 8,
+      "id_reserva": null,
+      "comentario": "",
+      "nota": 5,
+      "id_espaco": 19,
+      "id_locatario": 20,
+      "tipo_avaliacao": "LOCATARIO_AVALIA_ESPACO"
+    },
+    {
+      "id_avaliacao": 9,
+      "id_reserva": null,
+      "comentario": "",
+      "nota": 5,
+      "id_espaco": 20,
+      "id_locatario": 19,
+      "tipo_avaliacao": "LOCATARIO_AVALIA_ESPACO"
+    },
+    {
+      "id_avaliacao": 10,
+      "id_reserva": 25,
+      "comentario": "",
+      "nota": 5,
+      "id_espaco": 19,
+      "id_locatario": 20,
+      "tipo_avaliacao": "LOCATARIO_AVALIA_ESPACO"
+    },
+    {
+      "id_avaliacao": 11,
+      "id_reserva": 18,
+      "comentario": "",
+      "nota": 5,
+      "id_espaco": 19,
+      "id_locatario": 20,
+      "tipo_avaliacao": "LOCATARIO_AVALIA_ESPACO"
+    },
+    {
+      "id_avaliacao": 12,
+      "id_reserva": 21,
+      "comentario": "",
+      "nota": 3,
+      "id_espaco": 20,
+      "id_locatario": 20,
+      "tipo_avaliacao": "LOCATARIO_AVALIA_ESPACO"
+    },
+    {
+      "id_avaliacao": 13,
+      "id_reserva": 17,
+      "comentario": "",
+      "nota": 1,
+      "id_espaco": 20,
+      "id_locatario": 20,
+      "tipo_avaliacao": "LOCATARIO_AVALIA_ESPACO"
+    },
+    {
+      "id_avaliacao": 14,
+      "id_reserva": 20,
+      "comentario": "",
+      "nota": 5,
+      "id_espaco": 20,
+      "id_locatario": 19,
+      "tipo_avaliacao": "PROPRIETARIO_AVALIA_LOCATARIO"
+    },
+    {
+      "id_avaliacao": 15,
+      "id_reserva": 17,
+      "comentario": "Atrasado",
+      "nota": 5,
+      "id_espaco": 20,
+      "id_locatario": 20,
+      "tipo_avaliacao": "PROPRIETARIO_AVALIA_LOCATARIO"
+    },
+    {
+      "id_avaliacao": 16,
+      "id_reserva": 21,
+      "comentario": "Maluco",
+      "nota": 1,
+      "id_espaco": 20,
+      "id_locatario": 20,
+      "tipo_avaliacao": "PROPRIETARIO_AVALIA_LOCATARIO"
+    },
+    {
+      "id_avaliacao": 17,
+      "id_reserva": 25,
+      "comentario": "",
+      "nota": 5,
+      "id_espaco": 19,
+      "id_locatario": 20,
+      "tipo_avaliacao": "PROPRIETARIO_AVALIA_LOCATARIO"
+    },
+    {
+      "id_avaliacao": 18,
+      "id_reserva": 18,
+      "comentario": "",
+      "nota": 5,
+      "id_espaco": 19,
+      "id_locatario": 20,
+      "tipo_avaliacao": "PROPRIETARIO_AVALIA_LOCATARIO"
+    },
+    {
+      "id_avaliacao": 19,
+      "id_reserva": 36,
+      "comentario": "Pontual e Organizado",
+      "nota": 5,
+      "id_espaco": 27,
+      "id_locatario": 58,
+      "tipo_avaliacao": "PROPRIETARIO_AVALIA_LOCATARIO"
+    },
+    {
+      "id_avaliacao": 20,
+      "id_reserva": 36,
+      "comentario": "Limpo e bom",
+      "nota": 5,
+      "id_espaco": 27,
+      "id_locatario": 58,
+      "tipo_avaliacao": "LOCATARIO_AVALIA_ESPACO"
+    },
+    {
+      "id_avaliacao": 21,
+      "id_reserva": 32,
+      "comentario": "Muito educado ",
+      "nota": 5,
+      "id_espaco": 31,
+      "id_locatario": 58,
+      "tipo_avaliacao": "PROPRIETARIO_AVALIA_LOCATARIO"
+    },
+    {
+      "id_avaliacao": 22,
+      "id_reserva": 32,
+      "comentario": "Gostei do espaço",
+      "nota": 5,
+      "id_espaco": 31,
+      "id_locatario": 58,
+      "tipo_avaliacao": "LOCATARIO_AVALIA_ESPACO"
+    },
+    {
+      "id_avaliacao": 23,
+      "id_reserva": 35,
+      "comentario": "Muito atrasado e desorganizado",
+      "nota": 1,
+      "id_espaco": 28,
+      "id_locatario": 58,
+      "tipo_avaliacao": "PROPRIETARIO_AVALIA_LOCATARIO"
+    },
+    {
+      "id_avaliacao": 24,
+      "id_reserva": 34,
+      "comentario": "Muito desorganizado e não é pontual.",
+      "nota": 3,
+      "id_espaco": 29,
+      "id_locatario": 58,
+      "tipo_avaliacao": "PROPRIETARIO_AVALIA_LOCATARIO"
+    },
+    {
+      "id_avaliacao": 25,
+      "id_reserva": 35,
+      "comentario": "Ruim",
+      "nota": 2,
+      "id_espaco": 28,
+      "id_locatario": 58,
+      "tipo_avaliacao": "LOCATARIO_AVALIA_ESPACO"
+    },
+    {
+      "id_avaliacao": 26,
+      "id_reserva": 34,
+      "comentario": "Prometeu muito e entregou menos",
+      "nota": 3,
+      "id_espaco": 29,
+      "id_locatario": 58,
+      "tipo_avaliacao": "LOCATARIO_AVALIA_ESPACO"
+    }
+  ],
+  "nota": [
+    {
+      "id_nota": 7,
+      "data_nota": "2026-06-19",
+      "valor_nota": "333.33",
+      "id_reserva": 17
+    },
+    {
+      "id_nota": 8,
+      "data_nota": "2026-06-19",
+      "valor_nota": "140.00",
+      "id_reserva": 18
+    },
+    {
+      "id_nota": 9,
+      "data_nota": "2026-06-22",
+      "valor_nota": "4410.00",
+      "id_reserva": 20
+    },
+    {
+      "id_nota": 10,
+      "data_nota": "2026-06-22",
+      "valor_nota": "180.00",
+      "id_reserva": 21
+    },
+    {
+      "id_nota": 11,
+      "data_nota": "2026-06-22",
+      "valor_nota": "140.00",
+      "id_reserva": 25
+    },
+    {
+      "id_nota": 12,
+      "data_nota": "2026-06-28",
+      "valor_nota": "13.00",
+      "id_reserva": 26
+    },
+    {
+      "id_nota": 13,
+      "data_nota": "2026-06-28",
+      "valor_nota": "17.50",
+      "id_reserva": 24
+    },
+    {
+      "id_nota": 14,
+      "data_nota": "2026-07-08",
+      "valor_nota": "720.00",
+      "id_reserva": 36
+    },
+    {
+      "id_nota": 15,
+      "data_nota": "2026-07-08",
+      "valor_nota": "910.00",
+      "id_reserva": 32
+    },
+    {
+      "id_nota": 16,
+      "data_nota": "2026-07-08",
+      "valor_nota": "5.00",
+      "id_reserva": 33
+    },
+    {
+      "id_nota": 17,
+      "data_nota": "2026-07-08",
+      "valor_nota": "4000.00",
+      "id_reserva": 34
+    },
+    {
+      "id_nota": 18,
+      "data_nota": "2026-07-08",
+      "valor_nota": "6630.00",
+      "id_reserva": 35
+    }
+  ],
+  "pagamento": [
+    {
+      "id_pagamento": 7,
+      "data_pagamento": "2026-06-19",
+      "valor_pagamento": "333.33",
+      "status": "APROVADO",
+      "id_nota": 7,
+      "id_forma": 1
+    },
+    {
+      "id_pagamento": 8,
+      "data_pagamento": "2026-06-19",
+      "valor_pagamento": "333.33",
+      "status": "PENDENTE",
+      "id_nota": 7,
+      "id_forma": 1
+    },
+    {
+      "id_pagamento": 9,
+      "data_pagamento": "2026-06-19",
+      "valor_pagamento": "140.00",
+      "status": "APROVADO",
+      "id_nota": 8,
+      "id_forma": 1
+    },
+    {
+      "id_pagamento": 10,
+      "data_pagamento": "2026-06-22",
+      "valor_pagamento": "4410.00",
+      "status": "APROVADO",
+      "id_nota": 9,
+      "id_forma": 2
+    },
+    {
+      "id_pagamento": 11,
+      "data_pagamento": "2026-06-22",
+      "valor_pagamento": "4410.00",
+      "status": "PENDENTE",
+      "id_nota": 9,
+      "id_forma": 5
+    },
+    {
+      "id_pagamento": 12,
+      "data_pagamento": "2026-06-22",
+      "valor_pagamento": "4410.00",
+      "status": "PENDENTE",
+      "id_nota": 9,
+      "id_forma": 4
+    },
+    {
+      "id_pagamento": 13,
+      "data_pagamento": "2026-06-22",
+      "valor_pagamento": "180.00",
+      "status": "APROVADO",
+      "id_nota": 10,
+      "id_forma": 1
+    },
+    {
+      "id_pagamento": 14,
+      "data_pagamento": "2026-06-22",
+      "valor_pagamento": "140.00",
+      "status": "APROVADO",
+      "id_nota": 11,
+      "id_forma": 5
+    },
+    {
+      "id_pagamento": 15,
+      "data_pagamento": "2026-06-28",
+      "valor_pagamento": "17.50",
+      "status": "APROVADO",
+      "id_nota": 13,
+      "id_forma": 1
+    },
+    {
+      "id_pagamento": 16,
+      "data_pagamento": "2026-06-28",
+      "valor_pagamento": "13.00",
+      "status": "APROVADO",
+      "id_nota": 12,
+      "id_forma": 1
+    },
+    {
+      "id_pagamento": 17,
+      "data_pagamento": "2026-07-08",
+      "valor_pagamento": "720.00",
+      "status": "APROVADO",
+      "id_nota": 14,
+      "id_forma": 1
+    },
+    {
+      "id_pagamento": 18,
+      "data_pagamento": "2026-07-08",
+      "valor_pagamento": "910.00",
+      "status": "APROVADO",
+      "id_nota": 15,
+      "id_forma": 3
+    },
+    {
+      "id_pagamento": 19,
+      "data_pagamento": "2026-07-08",
+      "valor_pagamento": "5.00",
+      "status": "APROVADO",
+      "id_nota": 16,
+      "id_forma": 1
+    },
+    {
+      "id_pagamento": 20,
+      "data_pagamento": "2026-07-08",
+      "valor_pagamento": "4000.00",
+      "status": "APROVADO",
+      "id_nota": 17,
+      "id_forma": 1
+    },
+    {
+      "id_pagamento": 21,
+      "data_pagamento": "2026-07-08",
+      "valor_pagamento": "6630.00",
+      "status": "APROVADO",
+      "id_nota": 18,
+      "id_forma": 5
+    }
+  ]
+}

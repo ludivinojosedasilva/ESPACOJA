@@ -223,7 +223,7 @@ app.post("/login", async (req, res) => {
     if (!user) return res.status(400).json({ message: "Usuário não encontrado" });
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) return res.status(400).json({ message: "Senha inválida" });
-    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "8h" });
+    const token = jwt.sign({ id: user.id, email: user.email, tipoUsuario: user.tipoUsuario }, process.env.JWT_SECRET, { expiresIn: "8h" });
     res.json({ token, tipoUsuario: user.tipoUsuario });
   } catch (error) {
     res.status(500).json({ message: "Erro no login" });
@@ -1324,15 +1324,21 @@ app.delete("/admin/banco/apagar", adminMiddleware, async (req, res) => {
     const tabelas = [
       "pagamento", "nota", "avaliacao", "reserva",
       "imagem_espaco", "espaco", "forma_pagamento", "tipo_espaco",
-      "pessoa_juridica", "pessoa_fisica", "locatario", "proprietario", "usuario"
+      "pessoa_juridica", "pessoa_fisica", "locatario", "proprietario"
     ];
     for (const t of tabelas) {
       await sequelize.query(`TRUNCATE TABLE \`${t}\``);
     }
+
+    // Apaga usuarios mas PRESERVA o admin
+    await sequelize.query(
+      `DELETE FROM usuario WHERE tipo_usuario != 'ADMIN'`
+    );
+
     await sequelize.query("SET FOREIGN_KEY_CHECKS = 1");
 
     res.json({
-      message: "Banco apagado com sucesso. Backup salvo automaticamente.",
+      message: "Banco apagado com sucesso. Admin preservado. Backup salvo automaticamente.",
       backupCriadoEm: criadoEm
     });
   } catch (error) {
@@ -1340,7 +1346,6 @@ app.delete("/admin/banco/apagar", adminMiddleware, async (req, res) => {
     res.status(500).json({ message: "Erro ao apagar banco", error: error.message });
   }
 });
-
 // VERIFICAR SE EXISTE BACKUP
 app.get("/admin/banco/backup-info", adminMiddleware, async (req, res) => {
   try {
@@ -1447,29 +1452,242 @@ app.post("/admin/banco/restaurar", adminMiddleware, async (req, res) => {
   }
 });
 
-// INICIALIZAR BANCO (seed básico)
+// INICIALIZAR BANCO (seed completo — seed_data_v3)
 app.post("/admin/banco/inicializar", adminMiddleware, async (req, res) => {
   try {
-    await sequelize.query(`
-      INSERT IGNORE INTO tipo_espaco (nome, descricao, percentual_multa) VALUES
-      ('Salão de Festas','Espaço para eventos sociais', 15.00),
-      ('Quadra Esportiva','Quadra para esportes variados', 5.00),
-      ('Auditório','Espaço para palestras e conferências', 15.00),
-      ('Apartamento','Imóvel residencial para locação', 15.00),
-      ('Casa','Imóvel completo para locação', 10.00),
-      ('Espaço Coworking','Ambiente para trabalho profissional', 5.00)
-    `);
+    // Guarda ANTES de qualquer insert: se já existe usuário de seed, não roda nada de novo
+    // (evita duplicar tipo_espaco/forma_pagamento e reservas a cada clique em "Inicializar")
+    const [jaSeedado] = await sequelize.query(
+      `SELECT id_usuario FROM usuario WHERE email = 'carlos@email.com'`,
+      { type: QueryTypes.SELECT }
+    );
+    if (jaSeedado) {
+      return res.json({
+        message: "Banco já contém os dados completos do seed. Use 'Apagar tudo' antes de inicializar novamente."
+      });
+    }
 
-    await sequelize.query(`
-      INSERT IGNORE INTO forma_pagamento (nome) VALUES
-      ('PIX'),('Cartão de Crédito'),('Cartão de Débito'),
-      ('Boleto Bancário'),('Transferência Bancária')
-    `);
+    // 1. TIPOS DE ESPAÇO — só insere se a tabela estiver vazia (não há nome único, então
+    // INSERT IGNORE sozinho não impede duplicatas)
+    const [{ cnt: qtdTipos }] = await sequelize.query(
+      `SELECT COUNT(*) as cnt FROM tipo_espaco`, { type: QueryTypes.SELECT }
+    );
+    if (qtdTipos == 0) {
+      await sequelize.query(`
+        INSERT INTO tipo_espaco (nome, descricao, percentual_multa) VALUES
+        ('Salão de Festas','Espaço para eventos sociais e comemorações', 15.00),
+        ('Quadra Esportiva','Quadra para prática de esportes variados', 5.00),
+        ('Auditório','Espaço para palestras, reuniões e conferências', 15.00),
+        ('Apartamento','Imóvel residencial para locação temporária', 15.00),
+        ('Casa','Imóvel residencial completo para locação', 10.00),
+        ('Espaço Coworking','Ambiente compartilhado para trabalho profissional', 5.00)
+      `);
+    }
 
-    res.json({ message: "Banco inicializado com dados básicos!" });
+    // 2. FORMAS DE PAGAMENTO — mesma lógica
+    const [{ cnt: qtdFormas }] = await sequelize.query(
+      `SELECT COUNT(*) as cnt FROM forma_pagamento`, { type: QueryTypes.SELECT }
+    );
+    if (qtdFormas == 0) {
+      await sequelize.query(`
+        INSERT INTO forma_pagamento (nome) VALUES
+        ('PIX'),('Cartão de Crédito'),('Cartão de Débito'),
+        ('Boleto Bancário'),('Transferência Bancária')
+      `);
+    }
+
+    // Mapas de nome -> id real (não assume que IDs comecem em 1, pois o admin já ocupa um id)
+    const tipos = await sequelize.query(`SELECT id_tipo, nome FROM tipo_espaco`, { type: QueryTypes.SELECT });
+    const tipoIdPorNome = {};
+    tipos.forEach(t => { tipoIdPorNome[t.nome] = t.id_tipo; });
+
+    const formas = await sequelize.query(`SELECT id_forma, nome FROM forma_pagamento`, { type: QueryTypes.SELECT });
+    const formaIdPorNome = {};
+    formas.forEach(f => { formaIdPorNome[f.nome] = f.id_forma; });
+
+    const SENHA_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhy2"; // "senha123"
+
+    // 3. USUÁRIOS (posição 1-10, igual ao seed_data_v3.sql)
+    const seedUsuarios = [
+      { nome: "Carlos Mendes",  email: "carlos@email.com",   telefone: "51999990001", tipo_usuario: "PROPRIETARIO" },
+      { nome: "Ana Souza",      email: "ana@email.com",      telefone: "51999990002", tipo_usuario: "PROPRIETARIO" },
+      { nome: "Roberto Lima",   email: "roberto@email.com",  telefone: "51999990003", tipo_usuario: "PROPRIETARIO" },
+      { nome: "Fernanda Costa", email: "fernanda@email.com", telefone: "48999990004", tipo_usuario: "LOCATARIO" },
+      { nome: "João Pereira",   email: "joao@email.com",     telefone: "48999990005", tipo_usuario: "LOCATARIO" },
+      { nome: "Mariana Alves",  email: "mariana@email.com",  telefone: "48999990006", tipo_usuario: "LOCATARIO" },
+      { nome: "Pedro Oliveira", email: "pedro@email.com",    telefone: "51999990007", tipo_usuario: "LOCATARIO" },
+      { nome: "Lucia Ferreira", email: "lucia@email.com",    telefone: "51999990008", tipo_usuario: "LOCATARIO" },
+      { nome: "Marcos Rocha",   email: "marcos@email.com",   telefone: "51999990009", tipo_usuario: "LOCATARIO" },
+      { nome: "Beatriz Santos", email: "beatriz@email.com",  telefone: "48999990010", tipo_usuario: "LOCATARIO" }
+    ];
+    const cpfPorPosicao  = { 4: "12345678901", 5: "23456789012", 6: "34567890123", 7: "45678901234", 8: "56789012345" };
+    const cnpjPorPosicao = { 9: "12345678000190", 10: "98765432000110" };
+
+    const usuarioIdMap = {}; // posição (1-10) -> id_usuario real
+    for (let i = 0; i < seedUsuarios.length; i++) {
+      const pos = i + 1;
+      const u = seedUsuarios[i];
+      const [idUsuario] = await sequelize.query(
+        `INSERT INTO usuario (nome, email, senha, telefone, tipo_usuario) VALUES (?, ?, ?, ?, ?)`,
+        { replacements: [u.nome, u.email, SENHA_HASH, u.telefone, u.tipo_usuario], type: QueryTypes.INSERT }
+      );
+      usuarioIdMap[pos] = idUsuario;
+
+      if (u.tipo_usuario === "PROPRIETARIO") {
+        await sequelize.query(`INSERT INTO proprietario (id_usuario) VALUES (?)`, { replacements: [idUsuario] });
+      } else {
+        await sequelize.query(`INSERT INTO locatario (id_usuario) VALUES (?)`, { replacements: [idUsuario] });
+      }
+      if (cpfPorPosicao[pos]) {
+        await sequelize.query(`INSERT INTO pessoa_fisica (id_usuario, cpf) VALUES (?, ?)`, { replacements: [idUsuario, cpfPorPosicao[pos]] });
+      }
+      if (cnpjPorPosicao[pos]) {
+        await sequelize.query(`INSERT INTO pessoa_juridica (id_usuario, cnpj) VALUES (?, ?)`, { replacements: [idUsuario, cnpjPorPosicao[pos]] });
+      }
+    }
+
+    // 6. ESPAÇOS (posição 1-8)
+    const seedEspacos = [
+      { nome: "Salão Estrela",       endereco: "Rua das Flores, 100 - Porto Alegre/RS",        categoria: "Eventos",      valor_hora: 150.00, comodidades: "Ar-condicionado, Som, Projetor",        descricao: "Salão amplo para festas e eventos corporativos.",  tipoNome: "Salão de Festas",  proprietarioPos: 1 },
+      { nome: "Quadra Arena Sul",    endereco: "Av. Ipiranga, 500 - Porto Alegre/RS",          categoria: "Esportes",     valor_hora: 80.00,  comodidades: "Vestiário, Iluminação, Estacionamento", descricao: "Quadra poliesportiva coberta.",                     tipoNome: "Quadra Esportiva",  proprietarioPos: 1 },
+      { nome: "Auditório Central",   endereco: "Rua Sete de Setembro, 200 - Florianópolis/SC", categoria: "Corporativo",  valor_hora: 200.00, comodidades: "Projetor 4K, Microfone, Wi-Fi",         descricao: "Auditório moderno para até 150 pessoas.",           tipoNome: "Auditório",         proprietarioPos: 2 },
+      { nome: "Apto Vista Mar",      endereco: "Av. Beira Mar Norte, 800 - Florianópolis/SC",  categoria: "Residencial",  valor_hora: 120.00, comodidades: "Wi-Fi, Cozinha, 2 quartos, Vista mar",  descricao: "Apartamento sofisticado com vista para o mar.",     tipoNome: "Apartamento",       proprietarioPos: 2 },
+      { nome: "Casa da Serra",       endereco: "Rua das Araucárias, 45 - Gramado/RS",          categoria: "Residencial",  valor_hora: 90.00,  comodidades: "Churrasqueira, Lareira, Jardim",        descricao: "Casa charmosa na serra gaúcha.",                    tipoNome: "Casa",              proprietarioPos: 3 },
+      { nome: "Coworking StartHub",  endereco: "Av. Carlos Gomes, 300 - Porto Alegre/RS",      categoria: "Profissional", valor_hora: 45.00,  comodidades: "Wi-Fi Fibra, Café, Salas de reunião",   descricao: "Espaço de coworking moderno.",                      tipoNome: "Espaço Coworking",  proprietarioPos: 3 },
+      { nome: "Salão Jardins",       endereco: "Rua Coronel Genuíno, 150 - Porto Alegre/RS",   categoria: "Eventos",      valor_hora: 130.00, comodidades: "Cozinha, Banheiros, Estacionamento",    descricao: "Salão de festas com área externa e jardim.",        tipoNome: "Salão de Festas",   proprietarioPos: 1 },
+      { nome: "Quadra Beach Tennis", endereco: "Av. Praia de Belas, 20 - Porto Alegre/RS",     categoria: "Esportes",     valor_hora: 60.00,  comodidades: "Areia especial, Iluminação LED",        descricao: "Quadra de beach tennis homologada.",                tipoNome: "Quadra Esportiva",  proprietarioPos: 2 }
+    ];
+
+    const espacoIdMap = {}; // posição (1-8) -> id_espaco real
+    for (let i = 0; i < seedEspacos.length; i++) {
+      const pos = i + 1;
+      const e = seedEspacos[i];
+      const [idEspaco] = await sequelize.query(
+        `INSERT INTO espaco (nome, endereco, categoria, valor_hora, comodidades, descricao, id_tipo, id_proprietario) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        {
+          replacements: [
+            e.nome, e.endereco, e.categoria, e.valor_hora, e.comodidades, e.descricao,
+            tipoIdPorNome[e.tipoNome], usuarioIdMap[e.proprietarioPos]
+          ],
+          type: QueryTypes.INSERT
+        }
+      );
+      espacoIdMap[pos] = idEspaco;
+    }
+
+    // 7. IMAGENS DOS ESPAÇOS
+    const seedImagens = [
+      { url: "/uploads/salao-estrela-1.jpg",  descricao: "Vista frontal do salão",  espacoPos: 1 },
+      { url: "/uploads/salao-estrela-2.jpg",  descricao: "Interior decorado",       espacoPos: 1 },
+      { url: "/uploads/quadra-arena-1.jpg",   descricao: "Quadra principal",        espacoPos: 2 },
+      { url: "/uploads/auditorio-1.jpg",      descricao: "Vista do palco",          espacoPos: 3 },
+      { url: "/uploads/auditorio-2.jpg",      descricao: "Plateia completa",        espacoPos: 3 },
+      { url: "/uploads/apto-vista-mar-1.jpg", descricao: "Vista da sacada",         espacoPos: 4 },
+      { url: "/uploads/casa-serra-1.jpg",     descricao: "Fachada da casa",         espacoPos: 5 },
+      { url: "/uploads/coworking-1.jpg",      descricao: "Espaço de trabalho",      espacoPos: 6 },
+      { url: "/uploads/salao-jardins-1.jpg",  descricao: "Área externa com jardim", espacoPos: 7 },
+      { url: "/uploads/quadra-beach-1.jpg",   descricao: "Quadra iluminada",        espacoPos: 8 }
+    ];
+    for (const img of seedImagens) {
+      await sequelize.query(
+        `INSERT INTO imagem_espaco (url_imagem, descricao, id_espaco) VALUES (?, ?, ?)`,
+        { replacements: [img.url, img.descricao, espacoIdMap[img.espacoPos]] }
+      );
+    }
+
+    // 8. RESERVAS (posição 1-15)
+    const seedReservas = [
+      { inicio: "2026-08-10 14:00:00", fim: "2026-08-10 22:00:00", status: "CONFIRMADA", total: 1200.00, desconto: 0.00,   multa: 0.00,  espacoPos: 1, locatarioPos: 4 },
+      { inicio: "2026-08-12 08:00:00", fim: "2026-08-12 12:00:00", status: "CONFIRMADA", total: 320.00,  desconto: 0.00,   multa: 0.00,  espacoPos: 2, locatarioPos: 5 },
+      { inicio: "2026-08-15 09:00:00", fim: "2026-08-15 17:00:00", status: "PENDENTE",   total: 1600.00, desconto: 0.00,   multa: 0.00,  espacoPos: 3, locatarioPos: 6 },
+      { inicio: "2026-08-18 10:00:00", fim: "2026-08-18 14:00:00", status: "CONFIRMADA", total: 432.00,  desconto: 48.00,  multa: 0.00,  espacoPos: 4, locatarioPos: 7 },
+      { inicio: "2026-08-20 12:00:00", fim: "2026-08-20 20:00:00", status: "CONFIRMADA", total: 720.00,  desconto: 0.00,   multa: 0.00,  espacoPos: 5, locatarioPos: 8 },
+      { inicio: "2026-07-22 08:00:00", fim: "2026-07-22 18:00:00", status: "CANCELADA",  total: 450.00,  desconto: 0.00,   multa: 67.50, espacoPos: 6, locatarioPos: 9 },
+      { inicio: "2026-08-25 16:00:00", fim: "2026-08-25 23:00:00", status: "CONFIRMADA", total: 910.00,  desconto: 0.00,   multa: 0.00,  espacoPos: 7, locatarioPos: 10 },
+      { inicio: "2026-08-28 09:00:00", fim: "2026-08-28 13:00:00", status: "PENDENTE",   total: 240.00,  desconto: 0.00,   multa: 0.00,  espacoPos: 8, locatarioPos: 4 },
+      { inicio: "2026-09-05 18:00:00", fim: "2026-09-05 23:00:00", status: "CONFIRMADA", total: 750.00,  desconto: 0.00,   multa: 0.00,  espacoPos: 1, locatarioPos: 5 },
+      { inicio: "2026-07-10 08:00:00", fim: "2026-07-10 12:00:00", status: "FINALIZADA", total: 320.00,  desconto: 0.00,   multa: 0.00,  espacoPos: 2, locatarioPos: 6 },
+      { inicio: "2026-06-15 14:00:00", fim: "2026-06-15 22:00:00", status: "FINALIZADA", total: 1200.00, desconto: 0.00,   multa: 0.00,  espacoPos: 1, locatarioPos: 7 },
+      { inicio: "2026-06-20 09:00:00", fim: "2026-06-20 17:00:00", status: "FINALIZADA", total: 1440.00, desconto: 160.00, multa: 0.00,  espacoPos: 3, locatarioPos: 8 },
+      { inicio: "2026-05-10 10:00:00", fim: "2026-05-10 18:00:00", status: "FINALIZADA", total: 720.00,  desconto: 0.00,   multa: 0.00,  espacoPos: 5, locatarioPos: 9 },
+      { inicio: "2026-05-22 08:00:00", fim: "2026-05-22 12:00:00", status: "FINALIZADA", total: 180.00,  desconto: 0.00,   multa: 0.00,  espacoPos: 6, locatarioPos: 10 },
+      { inicio: "2026-04-05 16:00:00", fim: "2026-04-05 22:00:00", status: "FINALIZADA", total: 780.00,  desconto: 0.00,   multa: 0.00,  espacoPos: 7, locatarioPos: 4 }
+    ];
+
+    const reservaIdMap = {}; // posição (1-15) -> id_reserva real
+    for (let i = 0; i < seedReservas.length; i++) {
+      const pos = i + 1;
+      const r = seedReservas[i];
+      const [idReserva] = await sequelize.query(
+        `INSERT INTO reserva (data_hora_inicio, data_hora_fim, status, valor_total, valor_desconto, valor_multa, id_espaco, id_locatario) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        {
+          replacements: [r.inicio, r.fim, r.status, r.total, r.desconto, r.multa, espacoIdMap[r.espacoPos], usuarioIdMap[r.locatarioPos]],
+          type: QueryTypes.INSERT
+        }
+      );
+      reservaIdMap[pos] = idReserva;
+    }
+
+    // 9. AVALIAÇÕES
+    const seedAvaliacoes = [
+      { comentario: "Quadra excelente, bem cuidada!",               nota: 5, tipo: "LOCATARIO_AVALIA_ESPACO",       espacoPos: 2, locatarioPos: 6,  reservaPos: 10 },
+      { comentario: "Auditório incrível, superou as expectativas!", nota: 5, tipo: "LOCATARIO_AVALIA_ESPACO",       espacoPos: 3, locatarioPos: 8,  reservaPos: 12 },
+      { comentario: "Salão perfeito para a nossa festa!",           nota: 5, tipo: "LOCATARIO_AVALIA_ESPACO",       espacoPos: 7, locatarioPos: 4,  reservaPos: 15 },
+      { comentario: "Ótimo salão, atendimento excelente.",          nota: 4, tipo: "LOCATARIO_AVALIA_ESPACO",       espacoPos: 1, locatarioPos: 7,  reservaPos: 11 },
+      { comentario: "Boa estrutura para coworking.",                nota: 4, tipo: "LOCATARIO_AVALIA_ESPACO",       espacoPos: 6, locatarioPos: 10, reservaPos: 14 },
+      { comentario: "Casa bonita mas poderia ter mais vagas.",      nota: 3, tipo: "LOCATARIO_AVALIA_ESPACO",       espacoPos: 5, locatarioPos: 9,  reservaPos: 13 },
+      { comentario: "Locatario muito cuidadoso, recomendo!",       nota: 5, tipo: "PROPRIETARIO_AVALIA_LOCATARIO", espacoPos: 2, locatarioPos: 6,  reservaPos: 10 },
+      { comentario: "Ótimo locatario, deixou o espaço impecável.",  nota: 5, tipo: "PROPRIETARIO_AVALIA_LOCATARIO", espacoPos: 3, locatarioPos: 8,  reservaPos: 12 }
+    ];
+    for (const a of seedAvaliacoes) {
+      await sequelize.query(
+        `INSERT INTO avaliacao (comentario, nota, tipo_avaliacao, id_espaco, id_locatario, id_reserva) VALUES (?, ?, ?, ?, ?, ?)`,
+        { replacements: [a.comentario, a.nota, a.tipo, espacoIdMap[a.espacoPos], usuarioIdMap[a.locatarioPos], reservaIdMap[a.reservaPos]] }
+      );
+    }
+
+    // 10. NOTAS FISCAIS (posição 1-7)
+    const seedNotas = [
+      { data: "2026-07-10", valor: 320.00,  reservaPos: 10 },
+      { data: "2026-06-15", valor: 1200.00, reservaPos: 11 },
+      { data: "2026-06-20", valor: 1440.00, reservaPos: 12 },
+      { data: "2026-05-10", valor: 720.00,  reservaPos: 13 },
+      { data: "2026-05-22", valor: 180.00,  reservaPos: 14 },
+      { data: "2026-04-05", valor: 780.00,  reservaPos: 15 },
+      { data: "2026-07-22", valor: 67.50,   reservaPos: 6 }
+    ];
+    const notaIdMap = {}; // posição (1-7) -> id_nota real
+    for (let i = 0; i < seedNotas.length; i++) {
+      const pos = i + 1;
+      const n = seedNotas[i];
+      const [idNota] = await sequelize.query(
+        `INSERT INTO nota (data_nota, valor_nota, id_reserva) VALUES (?, ?, ?)`,
+        { replacements: [n.data, n.valor, reservaIdMap[n.reservaPos]], type: QueryTypes.INSERT }
+      );
+      notaIdMap[pos] = idNota;
+    }
+
+    // 11. PAGAMENTOS
+    const seedPagamentos = [
+      { data: "2026-07-09", valor: 320.00,  status: "APROVADO", notaPos: 1, formaNome: "PIX" },
+      { data: "2026-06-14", valor: 1200.00, status: "APROVADO", notaPos: 2, formaNome: "Cartão de Crédito" },
+      { data: "2026-06-19", valor: 1440.00, status: "APROVADO", notaPos: 3, formaNome: "PIX" },
+      { data: "2026-05-09", valor: 720.00,  status: "APROVADO", notaPos: 4, formaNome: "Cartão de Débito" },
+      { data: "2026-05-21", valor: 180.00,  status: "APROVADO", notaPos: 5, formaNome: "Boleto Bancário" },
+      { data: "2026-04-04", valor: 780.00,  status: "APROVADO", notaPos: 6, formaNome: "Cartão de Crédito" },
+      { data: "2026-07-23", valor: 67.50,   status: "PENDENTE", notaPos: 7, formaNome: "PIX" }
+    ];
+    for (const p of seedPagamentos) {
+      await sequelize.query(
+        `INSERT INTO pagamento (data_pagamento, valor_pagamento, status, id_nota, id_forma) VALUES (?, ?, ?, ?, ?)`,
+        { replacements: [p.data, p.valor, p.status, notaIdMap[p.notaPos], formaIdPorNome[p.formaNome]] }
+      );
+    }
+
+    res.json({ message: "Banco inicializado com o seed completo! (usuários, espaços, reservas, avaliações, notas e pagamentos)" });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Erro ao inicializar banco" });
+    res.status(500).json({ message: "Erro ao inicializar banco", error: error.message });
   }
 });
 
