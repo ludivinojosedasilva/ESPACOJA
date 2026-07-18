@@ -1,5 +1,5 @@
 {
-  "criadoEm": "2026-07-08T19:16:09.424Z",
+  "criadoEm": "2026-07-08T21:41:07.523Z",
   "tipo_espaco": [
     {
       "id_tipo": 1,
@@ -36,156 +36,12 @@
       "nome": "Espaço Coworking",
       "descricao": "Ambiente compartilhado para trabalho profissional",
       "percentual_multa": "5.00"
-    },
-    {
-      "id_tipo": 7,
-      "nome": "Salão de Festas",
-      "descricao": "Espaço para eventos sociais e comemorações",
-      "percentual_multa": "15.00"
-    },
-    {
-      "id_tipo": 8,
-      "nome": "Quadra Esportiva",
-      "descricao": "Quadra para prática de esportes variados",
-      "percentual_multa": "5.00"
-    },
-    {
-      "id_tipo": 9,
-      "nome": "Auditório",
-      "descricao": "Espaço para palestras, reuniões e conferências",
-      "percentual_multa": "15.00"
-    },
-    {
-      "id_tipo": 10,
-      "nome": "Apartamento",
-      "descricao": "Imóvel residencial para locação temporária",
-      "percentual_multa": "15.00"
-    },
-    {
-      "id_tipo": 11,
-      "nome": "Casa",
-      "descricao": "Imóvel residencial completo para locação",
-      "percentual_multa": "10.00"
-    },
-    {
-      "id_tipo": 12,
-      "nome": "Espaço Coworking",
-      "descricao": "Ambiente compartilhado para trabalho profissional",
-      "percentual_multa": "5.00"
-    },
-    {
-      "id_tipo": 13,
-      "nome": "Salão de Festas",
-      "descricao": "Espaço para eventos sociais e comemorações",
-      "percentual_multa": "15.00"
-    },
-    {
-      "id_tipo": 14,
-      "nome": "Quadra Esportiva",
-      "descricao": "Quadra para prática de esportes variados",
-      "percentual_multa": "5.00"
-    },
-    {
-      "id_tipo": 15,
-      "nome": "Auditório",
-      "descricao": "Espaço para palestras, reuniões e conferências",
-      "percentual_multa": "15.00"
-    },
-    {
-      "id_tipo": 16,
-      "nome": "Apartamento",
-      "descricao": "Imóvel residencial para locação temporária",
-      "percentual_multa": "15.00"
-    },
-    {
-      "id_tipo": 17,
-      "nome": "Casa",
-      "descricao": "Imóvel residencial completo para locação",
-      "percentual_multa": "10.00"
-    },
-    {
-      "id_tipo": 18,
-      "nome": "Espaço Coworking",
-      "descricao": "Ambiente compartilhado para trabalho profissional",
-      "percentual_multa": "5.00"
-    },
-    {
-      "id_tipo": 19,
-      "nome": "Salão de Festas",
-      "descricao": "Espaço para eventos sociais e comemorações",
-      "percentual_multa": "15.00"
-    },
-    {
-      "id_tipo": 20,
-      "nome": "Quadra Esportiva",
-      "descricao": "Quadra para prática de esportes variados",
-      "percentual_multa": "5.00"
-    },
-    {
-      "id_tipo": 21,
-      "nome": "Auditório",
-      "descricao": "Espaço para palestras, reuniões e conferências",
-      "percentual_multa": "15.00"
-    },
-    {
-      "id_tipo": 22,
-      "nome": "Apartamento",
-      "descricao": "Imóvel residencial para locação temporária",
-      "percentual_multa": "15.00"
-    },
-    {
-      "id_tipo": 23,
-      "nome": "Casa",
-      "descricao": "Imóvel residencial completo para locação",
-      "percentual_multa": "10.00"
-    },
-    {
-      "id_tipo": 24,
-      "nome": "Espaço Coworking",
-      "descricao": "Ambiente compartilhado para trabalho profissional",
-      "percentual_multa": "5.00"
-    },
-    {
-      "id_tipo": 25,
-      "nome": "Salão de Festas",
-      "descricao": "Espaço para eventos sociais",
-      "percentual_multa": "15.00"
-    },
-    {
-      "id_tipo": 26,
-      "nome": "Quadra Esportiva",
-      "descricao": "Quadra para esportes variados",
-      "percentual_multa": "5.00"
-    },
-    {
-      "id_tipo": 27,
-      "nome": "Auditório",
-      "descricao": "Espaço para palestras e conferências",
-      "percentual_multa": "15.00"
-    },
-    {
-      "id_tipo": 28,
-      "nome": "Apartamento",
-      "descricao": "Imóvel residencial para locação",
-      "percentual_multa": "15.00"
-    },
-    {
-      "id_tipo": 29,
-      "nome": "Casa",
-      "descricao": "Imóvel completo para locação",
-      "percentual_multa": "10.00"
-    },
-    {
-      "id_tipo": 30,
-      "nome": "Espaço Coworking",
-      "descricao": "Ambiente para trabalho profissional",
-      "percentual_multa": "5.00"
     }
   ],
   "forma_pagamento": [
     {
-      "id_forma": 1,
-      "nome": "PIX"
+      "id_forma": 4,
+      "nome": "Boleto Bancário"
     },
     {
       "id_forma": 2,
@@ -196,8 +52,8 @@
       "nome": "Cartão de Débito"
     },
     {
-      "id_forma": 4,
-      "nome": "Boleto Bancário"
+      "id_forma": 1,
+      "nome": "PIX"
     },
     {
       "id_forma": 5,
@@ -512,6 +368,17 @@
       "tipo_pessoa": null,
       "cpf": null,
       "cnpj": null
+    },
+    {
+      "id_usuario": 59,
+      "nome": "Anastácio Da Silva",
+      "email": "teste1@gmail.com",
+      "senha": "$2b$10$slvnRbz2ME1KfMnwPY8W4uTX3S/dEpPBh7ZBTkvBY/1WE93jdXWs.",
+      "telefone": "85986097347",
+      "tipo_usuario": "LOCATARIO",
+      "tipo_pessoa": null,
+      "cpf": null,
+      "cnpj": null
     }
   ],
   "espaco": [
@@ -706,6 +573,30 @@
       "id_tipo": 2,
       "id_proprietario": 24,
       "imagem": "/uploads/1782447797287.png"
+    },
+    {
+      "id_espaco": 32,
+      "nome": "Salão Estrela do Mar",
+      "endereco": "Balneário Arroio do Silva",
+      "categoria": null,
+      "valor_hora": "100.00",
+      "comodidades": "Área externa com jardim, churrasqueira, mesas e cadeiras, iluminação ajustável, estacionamento.",
+      "descricao": "Localizado próximo à praia, perfeito para festas temáticas e eventos sociais. Ambiente descontraído e acolhedor.",
+      "id_tipo": 1,
+      "id_proprietario": 22,
+      "imagem": "/uploads/1783539443386.jpg"
+    },
+    {
+      "id_espaco": 33,
+      "nome": "Hospício Bar",
+      "endereco": "Araranguá, Jardim das Avenidas - SC",
+      "categoria": null,
+      "valor_hora": "120.00",
+      "comodidades": "Área para buffet, Wi-Fi gratuito, Mesas e cadeiras inclusas, Segurança e monitoramento, Acesso para pessoas com mobilidade reduzida, Limpeza e manutenção do espaço, 👥 Capacidade: Até 200 pessoas",
+      "descricao": "Espaço versátil para festas familiares e eventos comunitários, com ambiente simples e funcional.",
+      "id_tipo": 1,
+      "id_proprietario": 22,
+      "imagem": "/uploads/1783541031465.jpeg"
     }
   ],
   "reserva": [
@@ -873,6 +764,83 @@
       "valor_multa": "0.00",
       "id_espaco": 27,
       "id_locatario": 58
+    },
+    {
+      "id_reserva": 37,
+      "data_hora_inicio": "2026-07-15T13:00:00.000Z",
+      "data_hora_fim": "2026-07-15T23:00:00.000Z",
+      "status": "PENDENTE",
+      "valor_total": "800.00",
+      "valor_desconto": "0.00",
+      "valor_multa": "0.00",
+      "id_espaco": 25,
+      "id_locatario": 59
+    },
+    {
+      "id_reserva": 38,
+      "data_hora_inicio": "2026-07-10T20:00:00.000Z",
+      "data_hora_fim": "2026-07-11T06:00:00.000Z",
+      "status": "FINALIZADA",
+      "valor_total": "1000.00",
+      "valor_desconto": "0.00",
+      "valor_multa": "0.00",
+      "id_espaco": 32,
+      "id_locatario": 59
+    },
+    {
+      "id_reserva": 39,
+      "data_hora_inicio": "2026-07-21T01:00:00.000Z",
+      "data_hora_fim": "2026-07-23T01:00:00.000Z",
+      "status": "FINALIZADA",
+      "valor_total": "4800.00",
+      "valor_desconto": "0.00",
+      "valor_multa": "0.00",
+      "id_espaco": 32,
+      "id_locatario": 58
+    },
+    {
+      "id_reserva": 40,
+      "data_hora_inicio": "2026-07-09T20:00:00.000Z",
+      "data_hora_fim": "2026-07-09T23:00:00.000Z",
+      "status": "CONFIRMADA",
+      "valor_total": "360.00",
+      "valor_desconto": "0.00",
+      "valor_multa": "0.00",
+      "id_espaco": 33,
+      "id_locatario": 59
+    },
+    {
+      "id_reserva": 41,
+      "data_hora_inicio": "2026-07-15T20:50:00.000Z",
+      "data_hora_fim": "2026-07-16T00:50:00.000Z",
+      "status": "PENDENTE",
+      "valor_total": "400.00",
+      "valor_desconto": "0.00",
+      "valor_multa": "0.00",
+      "id_espaco": 32,
+      "id_locatario": 20
+    },
+    {
+      "id_reserva": 42,
+      "data_hora_inicio": "2026-07-20T21:00:00.000Z",
+      "data_hora_fim": "2026-07-20T23:00:00.000Z",
+      "status": "CANCELADA",
+      "valor_total": "160.00",
+      "valor_desconto": "0.00",
+      "valor_multa": "0.00",
+      "id_espaco": 29,
+      "id_locatario": 20
+    },
+    {
+      "id_reserva": 43,
+      "data_hora_inicio": "2026-07-20T23:00:00.000Z",
+      "data_hora_fim": "2026-07-21T01:00:00.000Z",
+      "status": "FINALIZADA",
+      "valor_total": "100.00",
+      "valor_desconto": "0.00",
+      "valor_multa": "0.00",
+      "id_espaco": 30,
+      "id_locatario": 20
     }
   ],
   "avaliacao": [
@@ -1055,6 +1023,33 @@
       "id_espaco": 29,
       "id_locatario": 58,
       "tipo_avaliacao": "LOCATARIO_AVALIA_ESPACO"
+    },
+    {
+      "id_avaliacao": 27,
+      "id_reserva": 38,
+      "comentario": "",
+      "nota": 5,
+      "id_espaco": 32,
+      "id_locatario": 59,
+      "tipo_avaliacao": "PROPRIETARIO_AVALIA_LOCATARIO"
+    },
+    {
+      "id_avaliacao": 28,
+      "id_reserva": 39,
+      "comentario": "",
+      "nota": 2,
+      "id_espaco": 32,
+      "id_locatario": 58,
+      "tipo_avaliacao": "PROPRIETARIO_AVALIA_LOCATARIO"
+    },
+    {
+      "id_avaliacao": 29,
+      "id_reserva": 38,
+      "comentario": "",
+      "nota": 3,
+      "id_espaco": 32,
+      "id_locatario": 59,
+      "tipo_avaliacao": "LOCATARIO_AVALIA_ESPACO"
     }
   ],
   "nota": [
@@ -1129,6 +1124,24 @@
       "data_nota": "2026-07-08",
       "valor_nota": "6630.00",
       "id_reserva": 35
+    },
+    {
+      "id_nota": 19,
+      "data_nota": "2026-07-08",
+      "valor_nota": "1000.00",
+      "id_reserva": 38
+    },
+    {
+      "id_nota": 20,
+      "data_nota": "2026-07-08",
+      "valor_nota": "4800.00",
+      "id_reserva": 39
+    },
+    {
+      "id_nota": 21,
+      "data_nota": "2026-07-08",
+      "valor_nota": "100.00",
+      "id_reserva": 43
     }
   ],
   "pagamento": [
@@ -1251,6 +1264,30 @@
       "status": "APROVADO",
       "id_nota": 18,
       "id_forma": 5
+    },
+    {
+      "id_pagamento": 22,
+      "data_pagamento": "2026-07-08",
+      "valor_pagamento": "1000.00",
+      "status": "APROVADO",
+      "id_nota": 19,
+      "id_forma": 2
+    },
+    {
+      "id_pagamento": 23,
+      "data_pagamento": "2026-07-08",
+      "valor_pagamento": "4800.00",
+      "status": "APROVADO",
+      "id_nota": 20,
+      "id_forma": 1
+    },
+    {
+      "id_pagamento": 24,
+      "data_pagamento": "2026-07-08",
+      "valor_pagamento": "100.00",
+      "status": "PENDENTE",
+      "id_nota": 21,
+      "id_forma": 1
     }
   ]
 }
